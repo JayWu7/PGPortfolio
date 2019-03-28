@@ -11,7 +11,7 @@ import pgportfolio.marketdata.replaybuffer as rb
 
 MIN_NUM_PERIOD = 3
 
-
+#数据模型
 class DataMatrices:
     def __init__(self, start, end, period, batch_size=50, volume_average_days=30, buffer_bias_ratio=0,
                  market="poloniex", coin_filter=1, window_size=50, feature_number=3, test_portion=0.15,
@@ -19,8 +19,6 @@ class DataMatrices:
         """
         :param start: Unix time
         :param end: Unix time
-        :param access_period: the data access period of the input matrix.
-        :param trade_period: the trading period of the agent.
         :param global_period: the data access period of the global price matrix.
                               if it is not equal to the access period, there will be inserted observations
         :param coin_filter: number of coins that would be selected
@@ -37,18 +35,19 @@ class DataMatrices:
 
         # assert window_size >= MIN_NUM_PERIOD
         self.__coin_no = coin_filter
-        type_list = get_type_list(feature_number)
+        type_list = get_type_list(feature_number)   #生成训练特征
         self.__features = type_list
         self.feature_number = feature_number
-        volume_forward = get_volume_forward(self.__end-start, test_portion, portion_reversed)
+        volume_forward = get_volume_forward(self.__end-start, test_portion, portion_reversed)  #获取之前的交易量
         self.__history_manager = gdm.HistoryManager(coin_number=coin_filter, end=self.__end,
                                                     volume_average_days=volume_average_days,
-                                                    volume_forward=volume_forward, online=online)
+                                                    volume_forward=volume_forward, online=online)  #历史交易管理
         if market == "poloniex":
             self.__global_data = self.__history_manager.get_global_panel(start,
                                                                          self.__end,
                                                                          period=period,
                                                                          features=type_list)
+        #添加新的market
         else:
             raise ValueError("market {} is not valid".format(market))
         self.__period_length = period

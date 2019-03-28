@@ -1,3 +1,5 @@
+#poloniex  比特币交易市场
+
 import json
 import time
 import sys
@@ -25,6 +27,7 @@ class Poloniex:
         self.APIKey = APIKey.encode()
         self.Secret = Secret.encode()
         # Conversions
+        #格式化时间戳
         self.timestamp_str = lambda timestamp=time.time(), format="%Y-%m-%d %H:%M:%S": datetime.fromtimestamp(timestamp).strftime(format)
         self.str_timestamp = lambda datestr=self.timestamp_str(), format="%Y-%m-%d %H:%M:%S": int(time.mktime(time.strptime(datestr, format)))
         self.float_roundPercent = lambda floatN, decimalP=2: str(round(float(floatN) * 100, decimalP))+"%"
@@ -50,7 +53,12 @@ class Poloniex:
         if command in PUBLIC_COMMANDS:
             url = 'https://poloniex.com/public?'
             args['command'] = command
-            ret = urlopen(Request(url + urlencode(args)))
-            return json.loads(ret.read().decode(encoding='UTF-8'))
+            url = url + urlencode(args)
+            ret = urlopen(Request(url))
+            json_str = json.loads(ret.read().decode(encoding='UTF-8'))
+            if 'error' in json_str and len(json_str) == 1:
+                raise ValueError('Data requested is too large, url is {}'.format(url))
+                return False
+            return json_str
         else:
             return False

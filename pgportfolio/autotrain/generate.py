@@ -3,7 +3,8 @@ import json
 import os
 import logging
 from os import path
-
+# import pdb
+'''生成train_package 下面的子目录和每个子目录里对应的json文件'''
 
 def add_packages(config, repeat=1):
     train_dir = "train_package"
@@ -21,6 +22,7 @@ def add_packages(config, repeat=1):
     for i in range(repeat):
         max_dir_num += 1
         directory = package_dir+"/"+str(max_dir_num)
+        # pdb.set_trace()
         config["random_seed"] = i
         os.makedirs(directory)
         indexes.append(max_dir_num)

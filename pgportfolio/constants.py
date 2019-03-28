@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from os import path
+#常量，一些参数的设置
 
 DATABASE_DIR = path.realpath(__file__).\
     replace('pgportfolio/constants.pyc','/database/Data.db').\
     replace("pgportfolio\\constants.pyc","database\\Data.db").\
     replace('pgportfolio/constants.py','/database/Data.db').\
     replace("pgportfolio\\constants.py","database\\Data.db")
+
+
 CONFIG_FILE_DIR = 'net_config.json'
 LAMBDA = 1e-4  # lambda in loss function 5 in training
    # About time

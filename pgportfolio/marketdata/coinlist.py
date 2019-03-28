@@ -11,10 +11,10 @@ from pgportfolio.constants import *
 
 class CoinList(object):
     def __init__(self, end, volume_average_days=1, volume_forward=0):
-        self._polo = Poloniex()
+        self._polo = Poloniex()    #市场对象
         # connect the internet to accees volumes
-        vol = self._polo.marketVolume()
-        ticker = self._polo.marketTicker()
+        vol = self._polo.marketVolume()    #24小时交易量
+        ticker = self._polo.marketTicker()  #市场行情
         pairs = []
         coins = []
         volumes = []
@@ -26,6 +26,7 @@ class CoinList(object):
                                                            datetime.fromtimestamp(end-volume_forward).
                                                            strftime('%Y-%m-%d %H:%M')))
         for k, v in vol.items():
+            #只查找和BTC(比特币)有关的交易
             if k.startswith("BTC_") or k.endswith("_BTC"):
                 pairs.append(k)
                 for c, val in v.items():
@@ -73,6 +74,7 @@ class CoinList(object):
 
 
     def topNVolume(self, n=5, order=True, minVolume=0):
+        #返回前n个coins
         if minVolume == 0:
             r = self._df.loc[self._df['price'] > 2e-6]
             r = r.sort_values(by='volume', ascending=False)[:n]

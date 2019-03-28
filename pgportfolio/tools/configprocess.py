@@ -15,10 +15,10 @@ except NameError:
 
 def preprocess_config(config):
     fill_default(config)
-    if sys.version_info[0] == 2:
+    if sys.version_info[0] == 2:   #查看python版本
         return byteify(config)
     else:
-        return config
+        return config   #Python3版本直接返回
 
 
 def fill_default(config):
@@ -105,6 +105,7 @@ def load_config(index=None):
     else:
         with open(rootpath+"/pgportfolio/" + "net_config.json") as file:
             config = json.load(file)
+
     return preprocess_config(config)
 
 

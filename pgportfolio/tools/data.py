@@ -56,9 +56,8 @@ def pricenorm2d(m, reference_column,
         raise ValueError("there is no norm morthod called %s" % norm_method)
 
 
-def get_chart_until_success(polo, pair, start, period, end):
+def get_chart_until_success(polo, pair, start, period, end): #获得对应两个coins交易的排行榜数据
     is_connect_success = False
-    chart = {}
     while not is_connect_success:
         try:
             chart = polo.marketChart(pair=pair, start=int(start), period=int(period), end=int(end))
@@ -76,7 +75,7 @@ def get_type_list(feature_number):
     if feature_number == 1:
         type_list = ["close"]
     elif feature_number == 2:
-        type_list = ["close", "volume"]
+        # type_list = ["close", "volume"]
         raise NotImplementedError("the feature volume is not supported currently")
     elif feature_number == 3:
         type_list = ["close", "high", "low"]

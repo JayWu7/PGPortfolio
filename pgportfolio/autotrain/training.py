@@ -23,6 +23,7 @@ def train_one(save_path, config, log_file_dir, index, logfile_level, console_lev
     :param device: 0 or 1 to show which gpu to use, if 0, means use cpu instead of gpu
     :return : the Result namedtuple
     """
+    # print(save_path,config,log_file_dir,index,logfile_level,console_level,device)
     if log_file_dir:
         logging.basicConfig(filename=log_file_dir.replace("tensorboard","programlog"),
                             level=logfile_level)
@@ -40,6 +41,7 @@ def train_all(processes=1, device="cpu"):
                       at file and info at console. If greater than 1, the logging level is
                       info at file and warming at console.
     """
+
     if processes == 1:
         console_level = logging.INFO
         logfile_level = logging.DEBUG
@@ -54,9 +56,10 @@ def train_all(processes=1, device="cpu"):
     pool = []
     for dir in all_subdir:
         # train only if the log dir does not exist
-        if not str.isdigit(dir):
+        if not dir.isdigit():
             return
         # NOTE: logfile is for compatibility reason
+        #没有训练过
         if not (os.path.isdir("./"+train_dir+"/"+dir+"/tensorboard") or os.path.isdir("./"+train_dir+"/"+dir+"/logfile")):
             p = Process(target=train_one, args=(
                 "./" + train_dir + "/" + dir + "/netfile",

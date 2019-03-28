@@ -7,7 +7,6 @@ from pgportfolio.constants import *
 from pgportfolio.tools.data import get_volume_forward
 from time import time
 
-
 def get_coin_name_list(config, online):
     """
     :param online: boolean value to show if connected to internet,
