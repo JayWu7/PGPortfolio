@@ -69,16 +69,16 @@ class HistoryManager:
         logging.info("feature type list is %s" % str(features))
         self.__checkperiod(period)
 
-        time_index = pd.to_datetime(list(range(start, end + 1, period)), unit='s')
-        panel = pd.Panel(items=features, major_axis=coins, minor_axis=time_index, dtype=np.float32)
+        time_index = pd.to_datetime(list(range(start, end + 1, period)), unit='s') #生成时间 index
+        panel = pd.Panel(items=features, major_axis=coins, minor_axis=time_index, dtype=np.float32) #三维面板
 
         connection = sqlite3.connect(DATABASE_DIR)
         try:
             for row_number, coin in enumerate(coins):
                 for feature in features:
                     # NOTE: transform the start date to end date
-                    if feature == "close":
-                        sql = ("SELECT date+300 AS date_norm, close FROM History WHERE"
+                    if feature == "close":   #收盘价格
+                        sql = ("SELECT date+{period} AS date_norm, close FROM History WHERE"  #此处将300改为period
                                " date_norm>={start} and date_norm<={end}"
                                " and date_norm%{period}=0 and coin=\"{coin}\"".format(
                             start=start, end=end, period=period, coin=coin))
@@ -114,7 +114,7 @@ class HistoryManager:
                         raise ValueError(msg)
                     serial_data = pd.read_sql_query(sql, con=connection,
                                                     parse_dates=["date_norm"],
-                                                    index_col="date_norm")
+                                                    index_col="date_norm")   #sql语句有误
                     panel.loc[feature, coin, serial_data.index] = serial_data.squeeze()
                     panel = panel_fillna(panel, "both")
         finally:

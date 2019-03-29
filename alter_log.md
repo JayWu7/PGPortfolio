@@ -15,7 +15,7 @@
 ***
 ## 2.调整训练时间段（period）：
 
-​	以时间区间`[2019/01/01 , 2019/03/01]`训练的效果不明显
+​	以时间区间`[2019/01/01 , 2019/03/01]`训练的效果不明显  
     经过90000steps训练后，portfolio value 增长几乎为0.
   
    换用时间区间`[2019/02/01 , 2019/03/28]`，训练效果依然不佳
@@ -39,7 +39,45 @@
   * 效果非常明显！
   * 由 1.0 BTC ->  7.456198 BTC
 ***
-## 3.增长训练区
+## 3.增长训练区间
    * 测试区间 `[2015/03/01 , 2015/12/28]`
-        下载数据出现bug，应该是代码的问题，在思考修改方式
+        * 下载数据出现bug，应该是代码的问题，在思考修改方式
         ```ValueError: Must have equal len keys and value when setting with an iterable```
+        * bug：  
+          globaldatamatrix.py 中的第81行， sql语句中的 `300` 有误，应改为`period`  
+        * 修改第81行代码为：  
+          ` sql = ("SELECT date+{period} AS date_norm, close FROM History WHERE"  #此处将300改为period`  
+        * 修改后，程序可以正常运行,但是训练效果很差：  
+            ```
+            the step is 1127  
+            total assets are 1.000000 BTC
+            ```
+   * 测试区间 `[2015/07/01 , 2017/07/01]`  
+    效果有，但不明显:  
+           
+        ```
+        the step is 2775  
+        total assets are 1.398338 BTC
+        ```
+   * 测试区间 `[2017/05/01 , 2018/05/01]`  
+   效果非常差：
+        ```
+        the step is 1369
+        total assets are 0.621370 BTC
+        ```
+   * 测试区间 `[2017/01/01 , 2017/11/28]`  
+   有一点效果：
+        ```
+        the step is 1354
+        total assets are 1.690218 BTC
+        ```
+   * 测试区间 `[2016/01/01 , 2017/01/01]`
+   效果糟糕：
+        ```
+        the step is 1373
+        total assets are 0.974707 BTC
+        ```
+          
+                  
+        
+        
