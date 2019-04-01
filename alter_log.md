@@ -79,5 +79,11 @@
         ```
           
                   
-        
-        
+## 4.调整训练参数：
+* ### 训练方法：  
+        * 1. GradientDescent  
+        * 2. Adam (默认方法)
+        * 3. RMSProp   
+    具体代码见: **learn/nnagent.py** 中的 `init_train` 方法。
+    
+

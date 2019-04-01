@@ -114,7 +114,7 @@ class HistoryManager:
                         raise ValueError(msg)
                     serial_data = pd.read_sql_query(sql, con=connection,
                                                     parse_dates=["date_norm"],
-                                                    index_col="date_norm")   #sql语句有误
+                                                    index_col="date_norm")
                     panel.loc[feature, coin, serial_data.index] = serial_data.squeeze()
                     panel = panel_fillna(panel, "both")
         finally:
