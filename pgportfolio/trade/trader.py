@@ -16,12 +16,11 @@ class Trader:
         self._total_steps = total_steps
         self._period = waiting_period
         self._agent_type = agent_type
-
         if agent_type == "traditional":
             config["input"]["feature_number"] = 1
             config["input"]["norm_method"] = "relative"
             self._norm_method = "relative"
-        elif agent_type == "nn":
+        elif agent_type == "nn":  #this
             self._rolling_trainer = RollingTrainer(config, net_dir, agent=agent)
             self._coin_name_list = self._rolling_trainer.coin_list
             self._norm_method = config["input"]["norm_method"]
@@ -90,6 +89,9 @@ class Trader:
         starttime = time.time()
         omega = self._agent.decide_by_history(self.generate_history_matrix(),
                                               self._last_omega.copy())
+        print(1111111111111111111111111111111111111111111111111111111111111111111)
+        print(omega)
+        print(type(omega))
         self.trade_by_strategy(omega)
         if self._agent_type == "nn":
             self.rolling_train()

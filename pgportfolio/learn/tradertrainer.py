@@ -139,7 +139,7 @@ class TraderTrainer:
         if portfolio_value == 1.0:
             logging.info("average portfolio weights {}".format(weigths.mean(axis=0)))
 
-    def next_batch(self):  #下一盘
+    def next_batch(self):  # 下一批
         batch = self._matrix.next_batch()
         batch_input = batch["X"]
         batch_y = batch["y"]
@@ -148,18 +148,19 @@ class TraderTrainer:
         return batch_input, batch_y, batch_last_w, batch_w
 
     def __init_tensor_board(self, log_file_dir):
-        tf.summary.scalar('benefit', self._agent.portfolio_value)  #显示标量信息
+        tf.summary.scalar('benefit', self._agent.portfolio_value)  # 显示标量信息
         tf.summary.scalar('log_mean', self._agent.log_mean)
         tf.summary.scalar('loss', self._agent.loss)
         tf.summary.scalar("log_mean_free", self._agent.log_mean_free)
         for layer_key in self._agent.layers_dict:
-            tf.summary.histogram(layer_key, self._agent.layers_dict[layer_key]) # 显示直方图信息
+            tf.summary.histogram(layer_key, self._agent.layers_dict[layer_key])  # 显示直方图信息
         for var in tf.trainable_variables():
             tf.summary.histogram(var.name, var)
         grads = tf.gradients(self._agent.loss, tf.trainable_variables())
         for grad in grads:
             tf.summary.histogram(grad.name + '/gradient', grad)
         self.summary = tf.summary.merge_all()
+        print(self.summary)
         location = log_file_dir
         self.network_writer = tf.summary.FileWriter(location + '/network',
                                                     self._agent.session.graph)
@@ -192,16 +193,16 @@ class TraderTrainer:
             x, y, last_w, setw = self.next_batch()
             finish_data = time.time()
             total_data_time += (finish_data - step_start)
-            self._agent.train(x, y, last_w=last_w, setw=setw)
+            self._agent.train(x, y, last_w=last_w, setw=setw)  # train
             total_training_time += time.time() - finish_data
             if i % 1000 == 0 and log_file_dir:
                 logging.info("average time for data accessing is %s" % (total_data_time / 1000))
                 logging.info("average time for training is %s" % (total_training_time / 1000))
                 total_training_time = 0
                 total_data_time = 0
-                self.log_between_steps(i)
+                self.log_between_steps(i)  # 记录训练中的状态变化
 
-        if self.save_path:
+        if self.save_path:  # ./train_package/index/netfile
             self._agent.recycle()
             best_agent = NNAgent(self.config, restore_dir=self.save_path)
             self._agent = best_agent

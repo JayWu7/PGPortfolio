@@ -87,7 +87,7 @@ class NNAgent:
         return self.__net.layers_dict
 
     def recycle(self):
-        tf.reset_default_graph()
+        tf.reset_default_graph()  # Clears the default graph stack and resets the global default graph.
         self.__net.session.close()
 
     def __set_loss_function(self):  # 返回一个 计算loss的函数
@@ -151,6 +151,7 @@ class NNAgent:
     def train(self, x, y, last_w, setw):
         tflearn.is_training(True, self.__net.session)
         self.evaluate_tensors(x, y, last_w, setw, [self.__train_operation])
+        # x,y,last_W:matrix   set_w: function
 
     def evaluate_tensors(self, x, y, last_w, setw, tensors):
         """
@@ -163,6 +164,7 @@ class NNAgent:
         """
         tensors = list(tensors)
         tensors.append(self.__net.output)
+
         assert not np.any(np.isnan(x))
         assert not np.any(np.isnan(y))
         assert not np.any(np.isnan(last_w)), \
@@ -172,7 +174,7 @@ class NNAgent:
                                                     self.__y: y,
                                                     self.__net.previous_w: last_w,
                                                     self.__net.input_num: x.shape[0]})
-        setw(results[-1][:, 1:])
+        setw(results[-1][:, 1:]) #matrix
         return results[:-1]
 
     # save the variables path including file name
