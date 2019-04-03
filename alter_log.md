@@ -78,19 +78,32 @@
         total assets are 0.974707 BTC
         ```
           
-                  
+***                 
 ## 4.调整训练参数：
 * ### 训练方法：  
         * 1. GradientDescent  
         * 2. Adam (默认方法)
         * 3. RMSProp   
     具体代码见: **learn/nnagent.py** 中的 `init_train` 方法。
+* ### 是否快速训练：
+     * 在 **net_config.json** 中 设置 **fast_train** = [false or true]
+     * 具体 fast_train 和 not fast_train 的区别见：
+            _**rollingtrainer.py**_  中的： _**__rolling_logging**_ 方法
 
 ***
-## 5. 输出总交易手续费
-       已定位到代码
-       
+## 5. 输出总交易手续费：
+   结束交易后，输出此时间段交易的总手续费。  
+   修改代码：  
+   * 1 在 _**trader.py**_ 中添加: **__calculate_total_commission_fee_** 方法
+   * 2 在 **backtest.py** 中的 ***trade_by_strategy***方法 第 _79_ 行添加：
+        `self._calculate_total_commission_fee(pv_after_commission, value_after_training)  # 计算累积commission`               
+   * 3 在 **backtest.py** 中的 **_finish_trading_**方法 第 _36_ 行添加：
+        `logging.info("Total commission cost is: {} {}".format(self._total_commission_cost,'BTC'))`
+***       
 ## 6. 输出交易详细信息
 
-    
+***
+## 7. 根据训练结果执行交易：
+       在 trader.py 中有个  trade_by_strategy() 函数
+       backtest.py 继承并实现了这个函数
 

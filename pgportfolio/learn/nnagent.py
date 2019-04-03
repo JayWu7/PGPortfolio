@@ -88,7 +88,7 @@ class NNAgent:
 
     def recycle(self):
         tf.reset_default_graph()  # Clears the default graph stack and resets the global default graph.
-        self.__net.session.close()
+        self.__net.session.close()  #close session
 
     def __set_loss_function(self):  # 返回一个 计算loss的函数
         def loss_function4():

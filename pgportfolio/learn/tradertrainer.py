@@ -14,7 +14,7 @@ import tensorflow as tf
 from pgportfolio.learn.nnagent import NNAgent
 from pgportfolio.marketdata.datamatrices import DataMatrices
 import logging
-
+from ..constants import INIT_BTC as init_BTC
 Result = collections.namedtuple("Result",
                                 [
                                     "test_pv",
@@ -214,7 +214,7 @@ class TraderTrainer:
         return self.__log_result_csv(index, time.time() - starttime)
 
     def __log_result_csv(self, index, time):
-        from pgportfolio.trade import backtest
+        from pgportfolio.trade.backtest import BackTest
         dataframe = None
         csv_dir = './train_package/train_summary.csv'
         tflearn.is_training(False, self._agent.session)
@@ -225,9 +225,7 @@ class TraderTrainer:
                            self._agent.pv_vector,
                            self._agent.log_mean_free)
 
-        backtest = backtest.BackTest(self.config.copy(),
-                                     net_dir=None,
-                                     agent=self._agent)
+        backtest = BackTest(self.config.copy(),net_dir=None,agent=self._agent,init_BTC=init_BTC)
 
         backtest.start_trading()
         result = Result(test_pv=[v_pv],

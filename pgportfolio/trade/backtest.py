@@ -7,9 +7,9 @@ from pgportfolio.tools.trade import calculate_pv_after_commission
 
 
 class BackTest(trader.Trader):
-    def __init__(self, config, net_dir=None, agent=None, agent_type="nn"):
+    def __init__(self, config, net_dir=None, agent=None, agent_type="nn", init_BTC=1):
         trader.Trader.__init__(self, 0, config, 0, net_dir,
-                               initial_BTC=1, agent=agent, agent_type=agent_type)
+                               initial_BTC=init_BTC, agent=agent, agent_type=agent_type)
         if agent_type == "nn":
             data_matrices = self._rolling_trainer.data_matrices
         elif agent_type == "traditional":
@@ -32,15 +32,13 @@ class BackTest(trader.Trader):
         return np.array(self.__test_pc_vector, dtype=np.float32)
 
     def finish_trading(self):
-        self.__test_pv = self._total_capital
-
-        """
-        fig, ax = plt.subplots()
-        ax.bar(np.arange(len(self._rolling_trainer.data_matrices.sample_count)),
-               self._rolling_trainer.data_matrices.sample_count)
-        fig.tight_layout()
-        plt.show()
-        """
+        self.__test_pv = self._total_capital  # final portfolio value
+        logging.info("Total commission cost is: {} {}".format(self._total_commission_cost,'BTC'))
+        # fig, ax = plt.subplots()
+        # ax.bar(np.arange(len(self._rolling_trainer.data_matrices.sample_count)),
+        #        self._rolling_trainer.data_matrices.sample_count)
+        # fig.tight_layout()
+        # plt.show()
 
     def _log_trading_info(self, time, omega):
         pass
@@ -67,16 +65,23 @@ class BackTest(trader.Trader):
             inputs = inputs[:, :, 1:] / inputs[:, :, :-1]
         return inputs
 
-    def trade_by_strategy(self, omega):
+    def trade_by_strategy(self, omega):  ## important
         logging.info("the step is {}".format(self._steps))
         logging.debug("the raw omega is {}".format(omega))
+        #  self.__get_matrix_y()  # [1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]     len=11
         future_price = np.concatenate((np.ones(1), self.__get_matrix_y()))
+        # future_price # [1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]  len=12
+        # 计算手续费
         pv_after_commission = calculate_pv_after_commission(omega, self._last_omega, self._commission_rate)
-        portfolio_change = pv_after_commission * np.dot(omega, future_price)
-        self._total_capital *= portfolio_change
+        # new portfolio value rate,after training and cut commission fee
+        value_after_training = np.dot(omega, future_price)
+        portfolio_change = pv_after_commission * value_after_training
+        self._calculate_total_commission_fee(pv_after_commission, value_after_training)  # 计算累积commission
+        self._total_capital *= portfolio_change  # new portfolio value
+
         self._last_omega = pv_after_commission * omega * \
-                           future_price /\
-                           portfolio_change
+                           future_price / \
+                           portfolio_change  # may have error
+
         logging.debug("the portfolio change this period is : {}".format(portfolio_change))
         self.__test_pc_vector.append(portfolio_change)
-
