@@ -99,6 +99,12 @@
         `self._calculate_total_commission_fee(pv_after_commission, value_after_training)  # 计算累积commission`               
    * 3 在 **backtest.py** 中的 **_finish_trading_**方法 第 _36_ 行添加：
         `logging.info("Total commission cost is: {} {}".format(self._total_commission_cost,'BTC'))`
+   * 4 输出结果
+   ```
+    the step is 3001
+    total assets are 7.628891 BTC
+    Total commission cost is: 2.7399826498251487 BTC
+   ```
 ***       
 ## 6. 输出交易详细信息
 

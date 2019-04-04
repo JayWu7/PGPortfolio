@@ -26,4 +26,4 @@ YEAR = DAY * 365
 TABLE_NAME = 'test'
 
 #
-INIT_BTC = 10
+INIT_BTC = 1
