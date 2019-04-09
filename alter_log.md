@@ -113,3 +113,8 @@
        在 trader.py 中有个  trade_by_strategy() 函数
        backtest.py 继承并实现了这个函数
 
+## 8. 核实能否实现做空：
+       即核实能否判断出要下跌的股票
+
+## 9. 生成Docker镜像：
+        目前计划使用Ubuntu系统而不是Windows重新构建一个运行环境
