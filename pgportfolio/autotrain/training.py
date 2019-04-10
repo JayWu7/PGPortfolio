@@ -39,9 +39,9 @@ def train_all(processes=1, device="cpu"):
 
     :param processes: the number of the processes. If equal to 1, the logging level is debug
                       at file and info at console. If greater than 1, the logging level is
-                      info at file and warming at console.
+                      info at file and warning at console.
     """
-
+    start = time.time()
     if processes == 1:
         console_level = logging.INFO
         logfile_level = logging.DEBUG
@@ -57,7 +57,7 @@ def train_all(processes=1, device="cpu"):
     for dir in all_subdir:
         # train only if the log dir does not exist
         if not dir.isdigit():
-            return
+            continue
         # NOTE: logfile is for compatibility reason
         #没有训练过
         if not (os.path.isdir("./"+train_dir+"/"+dir+"/tensorboard") or os.path.isdir("./"+train_dir+"/"+dir+"/logfile")):
@@ -81,4 +81,5 @@ def train_all(processes=1, device="cpu"):
                     pool.remove(p)
             if len(pool)<processes:
                 wait = False
-    print("All the Tasks are Over")
+    end = time.time()
+    print("All the Tasks are Over,total time cost is {} s".format(end - start))

@@ -7,6 +7,7 @@ from datetime import datetime
 
 if sys.version_info[0] == 3:
     from urllib.request import Request, urlopen
+    from urllib.error import URLError
     from urllib.parse import urlencode
 else:
     from urllib2 import Request, urlopen
@@ -54,11 +55,14 @@ class Poloniex:
             url = 'https://poloniex.com/public?'
             args['command'] = command
             url = url + urlencode(args)
-            ret = urlopen(Request(url))
-            json_str = json.loads(ret.read().decode(encoding='UTF-8'))
-            if 'error' in json_str and len(json_str) == 1:
-                raise ValueError('Data requested is too large, url is {}'.format(url))
-                return False
-            return json_str
+            try:
+                self.urlopen = urlopen(Request(url), timeout=60)
+                ret = self.urlopen  #60s没打开则超时
+                json_str = json.loads(ret.read().decode(encoding='UTF-8'))
+                if 'error' in json_str and len(json_str) == 1:
+                    raise ValueError('Data requested is too large, url is {}'.format(url))
+                return json_str
+            except URLError:
+                raise URLError('connect {} error!'.format(url))
         else:
             return False

@@ -46,13 +46,13 @@ class TraderTrainer:
         self.input_config = config["input"]
         self.save_path = save_path
         self.best_metric = 0
-        np.random.seed(config["random_seed"])
+        np.random.seed(config["random_seed"]) # control to have the same random output with the same seed
 
-        self.__window_size = self.input_config["window_size"]
-        self.__coin_number = self.input_config["coin_number"]
-        self.__batch_size = self.train_config["batch_size"]
+        self.__window_size = self.input_config["window_size"]  # 31
+        self.__coin_number = self.input_config["coin_number"] # 11
+        self.__batch_size = self.train_config["batch_size"]  # 109  批量大小
         self.__snap_shot = self.train_config["snap_shot"]
-        config["input"]["fake_data"] = fake_data
+        config["input"]["fake_data"] = fake_data  #?
 
         self._matrix = DataMatrices.create_from_config(config)
 
@@ -188,7 +188,7 @@ class TraderTrainer:
 
         total_data_time = 0
         total_training_time = 0
-        for i in range(self.train_config["steps"]):
+        for i in range(self.train_config["steps"] + 1):
             step_start = time.time()
             x, y, last_w, setw = self.next_batch()
             finish_data = time.time()

@@ -56,7 +56,7 @@ def main():
         if not options.algo:
             training.train_all(int(options.processes), options.device)
         else:
-            for folder in options.folder:
+            for folder in options.folder:  # 未实现
                 raise NotImplementedError()
     elif options.mode == "generate":
         import pgportfolio.autotrain.generate as generate

@@ -17,8 +17,8 @@ class HistoryManager:
     # NOTE: return of the sqlite results is a list of tuples, each tuple is a row
     def __init__(self, coin_number, end, volume_average_days=1, volume_forward=0, online=True):
         self.initialize_db()  # 初始化History table
-        # self.__storage_period = FIVE_MINUTES  # keep this as 300
-        self.__storage_period = DAY   #period修改成一天
+        self.__storage_period = FIVE_MINUTES  # keep this as 300
+        # self.__storage_period = DAY   #period修改成一天
         self._coin_number = coin_number
         self._online = online
         if self._online:
@@ -200,7 +200,7 @@ class HistoryManager:
         #获取chart此处有错误，如果一次请求的数据太多，会返回error
         #{'error': 'Data requested is too large. Please specify a longer period or a shorter date range, or use resolution=auto to automatically calculate the shortest supported period for your date range.'}
         #如果chart不是list类型，则表明出错
-        assert isinstance(chart,list),'chart is a {},not a list,{}'.format(type(chart),chart)
+        # assert isinstance(chart,list),'chart is a {},not a list,{}'.format(type(chart),chart)
         for c in chart:
             if c["date"] > 0:
                 if c['weightedAverage'] == 0:

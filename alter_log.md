@@ -41,7 +41,7 @@
 ***
 ## 3.增长训练区间
    * 测试区间 `[2015/03/01 , 2015/12/28]`
-        * 下载数据出现bug，应该是代码的问题，在思考修改方式
+        * 下载数据出现bug:
         ```ValueError: Must have equal len keys and value when setting with an iterable```
         * bug：  
           globaldatamatrix.py 中的第81行， sql语句中的 `300` 有误，应改为`period`  
@@ -118,3 +118,40 @@
 
 ## 9. 生成Docker镜像：
         目前计划使用Ubuntu系统而不是Windows重新构建一个运行环境
+
+***
+## 10. 修改poloniex.py 
+  增加了判断爬取超时机制，如果爬取一个json超过1分钟还未成功，则raise Exception
+  修改 api() 函数，修改后为：  
+  ```
+    def api(self, command, args={}):
+        if command in PUBLIC_COMMANDS:
+            url = 'https://poloniex.com/public?'
+            args['command'] = command
+            url = url + urlencode(args)
+            try:
+                self.urlopen = urlopen(Request(url), timeout=60)
+                ret = self.urlopen  #60s没打开则超时
+                json_str = json.loads(ret.read().decode(encoding='UTF-8'))
+                if 'error' in json_str and len(json_str) == 1:
+                    raise ValueError('Data requested is too large, url is {}'.format(url))
+                return json_str
+            except URLError:
+                raise URLError('connect {} error!'.format(url))
+        else:
+            return False
+```
+
+***
+## 11. 修改一个关键参数：
+之前因为数据下载失败，将**_/pgportfolio/marketdata/globaldatamatrix.py_**中：
+第20行的 **_self.__storage_period_** 修改成了 DAY （86400）
+数据爬取问题解决后，修改为原来的 FIVE_MINUTES， 测试效果明显好转：
+
+```buildoutcfg
+the step is 194
+total assets are 91.138219 BTC
+Total commission cost is: 17.099172777243812 BTC
+All the Tasks are Over,total time cost is 1335.0637793540955 s
+
+```

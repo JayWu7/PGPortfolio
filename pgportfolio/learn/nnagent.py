@@ -40,7 +40,7 @@ class NNAgent:
                                                  decay_steps=self.__config["training"]["decay_steps"],
                                                  decay_rate=self.__config["training"]["decay_rate"],
                                                  training_method=self.__config["training"]["training_method"])
-        self.__saver = tf.train.Saver()  # saver对象，将训练参数保存再checkpoint中
+        self.__saver = tf.train.Saver()  # saver对象，将训练参数保存在checkpoint中
         if restore_dir:
             self.__saver.restore(self.__net.session, restore_dir)
         else:  # 第一次跑进这个分支

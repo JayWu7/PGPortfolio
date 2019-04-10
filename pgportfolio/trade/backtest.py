@@ -33,7 +33,7 @@ class BackTest(trader.Trader):
 
     def finish_trading(self):
         self.__test_pv = self._total_capital  # final portfolio value
-        logging.info("Total commission cost is: {} {}".format(self._total_commission_cost,'BTC'))
+        logging.info("Total commission cost is: {} {}".format(self._total_commission_cost, 'BTC'))
         # fig, ax = plt.subplots()
         # ax.bar(np.arange(len(self._rolling_trainer.data_matrices.sample_count)),
         #        self._rolling_trainer.data_matrices.sample_count)

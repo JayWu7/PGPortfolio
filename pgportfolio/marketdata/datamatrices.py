@@ -35,11 +35,11 @@ class DataMatrices:
         self.__end = int(end)
 
         # assert window_size >= MIN_NUM_PERIOD
-        self.__coin_no = coin_filter
+        self.__coin_no = coin_filter # 11
         type_list = get_type_list(feature_number)  # 生成训练特征
         self.__features = type_list
         self.feature_number = feature_number
-        volume_forward = get_volume_forward(self.__end - start, test_portion, portion_reversed)  # 获取之前的交易量
+        volume_forward = get_volume_forward(self.__end - start, test_portion, portion_reversed)  # 获取之前的交易量 a num
         self.__history_manager = gdm.HistoryManager(coin_number=coin_filter, end=self.__end,
                                                     volume_average_days=volume_average_days,
                                                     volume_forward=volume_forward, online=online)  # 历史交易管理
@@ -105,7 +105,7 @@ class DataMatrices:
                             is_permed=input_config["is_permed"],
                             buffer_bias_ratio=train_config["buffer_biased"],
                             batch_size=train_config["batch_size"],
-                            volume_average_days=input_config["volume_average_days"],
+                            volume_average_days=input_config["volume_average_days"], #30
                             test_portion=input_config["test_portion"],
                             portion_reversed=input_config["portion_reversed"],
                             )
