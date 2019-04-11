@@ -19,16 +19,20 @@ def download_helper(url, divide=2):
         query['end'] = [str(mid)]
         str_query = urlencode(query, doseq=True)
         new_url = urlunparse(tup._replace(query=str_query))  # namedtuple alter the attribute)
+        print(new_url)
         conn = urlopen(Request(new_url))  # 60s没打开则超时
         json_str = json.loads(conn.read().decode(encoding='UTF-8'))
         if 'error' in json_str and len(json_str) == 1:
             return False  # 按照当前divide 分开抓取数据，仍然出错
         jsons.append(json_str)
-        query['start'] = query['end']
-        start = mid
+        start = mid + 300
+        query['start'] = [str(start)]
+
     return [item for json in jsons for item in json]
 
+
 import time
+
 st = time.time()
 jsons = download_helper(u)
 en = time.time()

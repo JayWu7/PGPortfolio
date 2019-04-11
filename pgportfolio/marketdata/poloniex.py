@@ -63,15 +63,15 @@ class Poloniex:
             args['command'] = command
             url = url + urlencode(args)
             try:
-                self.conn = urlopen(Request(url),timeout=60)  # 60s没打开则超时
+                self.conn = urlopen(Request(url), timeout=60)  # 60s没打开则超时
                 json_str = json.loads(self.conn.read().decode(encoding='UTF-8'))
                 if 'error' in json_str and len(json_str) == 1:
-                    # for div in range(2, 10):
-                    #     json_str = self.download_helper(url, div)
-                    #     if json_str:  # != False
-                    #         break
-                    # else:
-                    raise ValueError('Data requested is too large, url is {}'.format(url))
+                    for div in range(2, 10):
+                        json_str = self.download_helper(url, div)
+                        if json_str:  # != False
+                            break
+                    else:
+                        raise ValueError('Data requested is too large, url is {}'.format(url))
                 return json_str
             except URLError:
                 raise URLError('connect {} error!'.format(url))
@@ -95,6 +95,6 @@ class Poloniex:
             if 'error' in json_str and len(json_str) == 1:
                 return False  # 按照当前divide 分开抓取数据，仍然出错
             jsons.append(json_str)
-            query['start'] = query['end']
-            start = mid
+            start = mid + 300
+            query['start'] = [str(start)]
         return [item for json in jsons for item in json]

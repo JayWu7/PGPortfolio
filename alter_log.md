@@ -207,4 +207,10 @@ All the Tasks are Over,total time cost is 795.0882556438446 s
 
 ***
 训练区间： `[2018/10/01, 2019/03/01]`  训练步数： `30000`
-* a. Adam: ()
+* a. Adam: (效果不错)
+```buildoutcfg
+the step is 547
+total assets are 2.560543 BTC
+Total commission cost is: 2.560890037149945 BTC
+All the Tasks are Over,total time cost is 900.0495800971985 s
+```
