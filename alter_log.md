@@ -121,7 +121,7 @@
 
 ***
 ## 10. 修改poloniex.py 
-  增加了判断爬取超时机制，如果爬取一个json超过1分钟还未成功，则raise Exception
+  增加了判断爬取超时机制，如果爬取一个json超过1分钟还未成功，则raise Exception  
   修改 api() 函数，修改后为：  
   ```
     def api(self, command, args={}):
@@ -130,9 +130,8 @@
             args['command'] = command
             url = url + urlencode(args)
             try:
-                self.urlopen = urlopen(Request(url), timeout=60)
-                ret = self.urlopen  #60s没打开则超时
-                json_str = json.loads(ret.read().decode(encoding='UTF-8'))
+                self.conn = urlopen(Request(url), timeout=60)  # 60s没打开则超时
+                json_str = json.loads(self.conn.read().decode(encoding='UTF-8'))
                 if 'error' in json_str and len(json_str) == 1:
                     raise ValueError('Data requested is too large, url is {}'.format(url))
                 return json_str
@@ -141,7 +140,6 @@
         else:
             return False
 ```
-
 ***
 ## 11. 修改一个关键参数：
 之前因为数据下载失败，将**_/pgportfolio/marketdata/globaldatamatrix.py_**中：
@@ -153,5 +151,60 @@ the step is 194
 total assets are 91.138219 BTC
 Total commission cost is: 17.099172777243812 BTC
 All the Tasks are Over,total time cost is 1335.0637793540955 s
-
 ```
+
+***
+## 12. 采用不同的训练方法，测试训练效果
+
+训练区间： `[2015/01/01, 2015/03/01]`  训练步数： `8000`
+* a. Adam:  (效果很好)
+```buildoutcfg
+the step is 194
+total assets are 62.767655 BTC
+Total commission cost is: 11.192812211441508 BTC
+All the Tasks are Over,total time cost is 825.0877954959869 s
+```
+* b. GradientDescent: (效果堪忧)
+```buildoutcfg
+the step is 194
+total assets are 1.009335 BTC
+Total commission cost is: 0.009474774566169778 BTC
+All the Tasks are Over,total time cost is 375.02694392204285 s
+```
+
+* c. RMSProp: (效果理想)
+```buildoutcfg
+the step is 194
+total assets are 47.879087 BTC
+Total commission cost is: 8.499764558195123 BTC
+All the Tasks are Over,total time cost is 380.0338079929352 s
+```
+***
+训练区间： `[2019/01/01, 2019/04/08]`  训练步数： `30000`
+
+* a. Adam: (效果不错)
+```buildoutcfg
+the step is 340
+total assets are 3.692637 BTC
+Total commission cost is: 1.3877036983392497 BTC
+All the Tasks are Over,total time cost is 1180.0701975822449 s
+```
+* b. GradientDescent: (效果堪忧)
+```buildoutcfg
+the step is 340
+total assets are 1.002613 BTC
+Total commission cost is: 0.006522101848995306 BTC
+All the Tasks are Over,total time cost is 695.0470299720764 s
+```
+
+* c. RMSProp: (效果不错)
+```buildoutcfg
+the step is 340
+total assets are 3.421211 BTC
+Total commission cost is: 1.128473636940146 BTC
+All the Tasks are Over,total time cost is 795.0882556438446 s
+```
+
+***
+训练区间： `[2018/10/01, 2019/03/01]`  训练步数： `30000`
+* a. Adam: ()
