@@ -214,3 +214,30 @@ total assets are 2.560543 BTC
 Total commission cost is: 2.560890037149945 BTC
 All the Tasks are Over,total time cost is 900.0495800971985 s
 ```
+
+* b. GradientDescent: (效果不好)
+```buildoutcfg
+the step is 547
+total assets are 0.983031 BTC
+Total commission cost is: 0.00715608017340627 BTC
+All the Tasks are Over,total time cost is 1340.1400792598724 s
+```
+
+* c. RMSProp: (效果理想)
+```buildoutcfg
+total assets are 2.825635 BTC
+the step is 547
+total assets are 2.825235 BTC
+Total commission cost is: 1.4786406733220454 BTC
+All the Tasks are Over,total time cost is 1000.1118497848511 s
+```
+
+继续测试此区间，更换测试steps，方法使用 Adam 和 RMSProp：
+
+1. 50000 steps， Adam：
+```buildoutcfg
+the step is 547
+total assets are 2.846247 BTC
+Total commission cost is: 2.926565633324409 BTC
+All the Tasks are Over,total time cost is 1650.152584552765 s
+```

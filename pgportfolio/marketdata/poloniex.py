@@ -1,5 +1,5 @@
 # poloniex  比特币交易市场
-import re
+import socket
 import json
 import time
 import sys
@@ -64,6 +64,11 @@ class Poloniex:
             url = url + urlencode(args)
             try:
                 self.conn = urlopen(Request(url), timeout=60)  # 60s没打开则超时
+            except URLError:
+                raise URLError('connect {} error!'.format(url))
+            except socket.timeout:
+                raise socket.timeout('The read json file operation timed out')
+            else:  # no exception
                 json_str = json.loads(self.conn.read().decode(encoding='UTF-8'))
                 if 'error' in json_str and len(json_str) == 1:
                     for div in range(2, 10):
@@ -73,8 +78,6 @@ class Poloniex:
                     else:
                         raise ValueError('Data requested is too large, url is {}'.format(url))
                 return json_str
-            except URLError:
-                raise URLError('connect {} error!'.format(url))
         else:
             return False
 
