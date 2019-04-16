@@ -93,6 +93,8 @@ class Poloniex:
             query['end'] = [str(mid)]
             str_query = urlencode(query, doseq=True)
             new_url = urlunparse(tup._replace(query=str_query))  # namedtuple alter the attribute)
+            print(11111111111111111111111111111111111)
+            print(new_url)
             conn = urlopen(Request(new_url))  # 60s没打开则超时
             json_str = json.loads(conn.read().decode(encoding='UTF-8'))
             if 'error' in json_str and len(json_str) == 1:

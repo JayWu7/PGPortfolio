@@ -74,14 +74,14 @@ class BackTest(trader.Trader):
         # 计算手续费
         pv_after_commission = calculate_pv_after_commission(omega, self._last_omega, self._commission_rate)
         # new portfolio value rate,after training and cut commission fee
-        value_after_training = np.dot(omega, future_price)
-        portfolio_change = pv_after_commission * value_after_training
+        value_after_training = np.dot(omega, future_price)   #calculate the new value(without commission)
+        portfolio_change = pv_after_commission * value_after_training  # > 1 means portfolio value added
         self._calculate_total_commission_fee(pv_after_commission, value_after_training)  # 计算累积commission
         self._total_capital *= portfolio_change  # new portfolio value
 
         self._last_omega = pv_after_commission * omega * \
                            future_price / \
-                           portfolio_change  # may have error
+                           portfolio_change
 
         logging.debug("the portfolio change this period is : {}".format(portfolio_change))
         self.__test_pc_vector.append(portfolio_change)

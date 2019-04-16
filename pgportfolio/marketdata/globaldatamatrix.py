@@ -10,7 +10,7 @@ from pgportfolio.constants import *
 import sqlite3
 from datetime import datetime
 import logging
-
+from  sqlite3 import IntegrityError
 
 class HistoryManager:
     # if offline ,the coin_list could be None
@@ -209,13 +209,16 @@ class HistoryManager:
                     weightedAverage = c['weightedAverage']
 
                 # NOTE here the USDT is in reversed order
-                if 'reversed_' in coin:
-                    cursor.execute('INSERT INTO History VALUES (?,?,?,?,?,?,?,?,?)',
-                                   (c['date'], coin, 1.0 / c['low'], 1.0 / c['high'], 1.0 / c['open'],
-                                    1.0 / c['close'], c['quoteVolume'], c['volume'],
-                                    1.0 / weightedAverage))
-                else:
-                    cursor.execute('INSERT INTO History VALUES (?,?,?,?,?,?,?,?,?)',
-                                   (c['date'], coin, c['high'], c['low'], c['open'],
-                                    c['close'], c['volume'], c['quoteVolume'],
-                                    weightedAverage))
+                try:
+                    if 'reversed_' in coin:
+                        cursor.execute('INSERT INTO History VALUES (?,?,?,?,?,?,?,?,?)',
+                                       (c['date'], coin, 1.0 / c['low'], 1.0 / c['high'], 1.0 / c['open'],
+                                        1.0 / c['close'], c['quoteVolume'], c['volume'],
+                                        1.0 / weightedAverage))
+                    else:
+                        cursor.execute('INSERT INTO History VALUES (?,?,?,?,?,?,?,?,?)',
+                                       (c['date'], coin, c['high'], c['low'], c['open'],
+                                        c['close'], c['volume'], c['quoteVolume'],
+                                        weightedAverage))
+                except IntegrityError:  # may have the SQL Error
+                    print('{} has been in the database'.format(c['date']))

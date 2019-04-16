@@ -241,3 +241,85 @@ total assets are 2.846247 BTC
 Total commission cost is: 2.926565633324409 BTC
 All the Tasks are Over,total time cost is 1650.152584552765 s
 ```
+
+2. 50000 steps， RMSProp：
+```buildoutcfg
+the step is 547
+total assets are 3.070942 BTC
+Total commission cost is: 1.6703643707968703 BTC
+All the Tasks are Over,total time cost is 7108.959946870804 s
+```
+
+更换训练次数至 80000 steps：
+
+Adam：
+```buildoutcfg
+the step is 547
+total assets are 2.993143 BTC
+Total commission cost is: 2.940805687719876 BTC
+All the Tasks are Over,total time cost is 2485.4244163036346 s
+```
+
+RMSProp:
+```buildoutcfg
+the step is 547
+total assets are 3.266608 BTC
+Total commission cost is: 1.7923864193707273 BTC
+All the Tasks are Over,total time cost is 39063.200154304504 s
+```
+
+更换训练步数至 100000 steps：
+
+Adam：
+```buildoutcfg
+the step is 547
+total assets are 3.052300 BTC
+Total commission cost is: 2.9244506845837797 BTC
+All the Tasks are Over,total time cost is 2255.311032772064 s
+```
+
+RMSProp:
+```buildoutcfg
+the step is 547
+total assets are 3.329421 BTC
+Total commission cost is: 1.8063832642471864 BTC
+All the Tasks are Over,total time cost is 1675.2352316379547 s
+```
+
+***
+训练区间 [2017/03/01, 2019/03/01]
+
+steps 3000:
+
+Adam:
+```buildoutcfg
+the step is 2771
+total assets are 248.239861 BTC
+Total commission cost is: 186.99646694694266 BTC
+All the Tasks are Over,total time cost is 2220.0452315807343 s
+```
+RMSProp:
+```buildoutcfg
+the step is 2771
+total assets are 201.961743 BTC
+Total commission cost is: 160.1141332048935 BTC
+All the Tasks are Over,total time cost is 2495.984961748123 s
+```
+
+steps 30000:
+
+Adam
+```buildoutcfg
+the step is 2771
+total assets are 573.154686 BTC
+Total commission cost is: 433.6781422970878 BTC
+All the Tasks are Over,total time cost is 2220.0380775928497 s
+```
+
+RMSProp:
+```buildoutcfg
+the step is 2771
+total assets are 388.794596 BTC
+Total commission cost is: 306.5773426398393 BTC
+All the Tasks are Over,total time cost is 2525.045242547989 s
+```
