@@ -88,15 +88,8 @@ class Trader:
     def __trade_body(self):
         self._current_error_state = 'S000'
         starttime = time.time()
-        omega = self._agent.decide_by_history(self.generate_history_matrix(),
-                                              self._last_omega.copy())
+        omega = self._agent.decide_by_history(self.generate_history_matrix(), self._last_omega.copy())
         ## omega: numpy.ndarray 记录每个asset分配到的BTC的比例，和为1  len=12
-        print('size: ', omega.size)
-        print('dtype:', omega.dtype)
-        print('shape: ', omega.shape)
-        print('data: ', omega.data)
-        # assert 1 == 2, 'Test'
-
         self.trade_by_strategy(omega)
         if self._agent_type == "nn":
             self.rolling_train()

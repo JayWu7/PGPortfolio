@@ -79,6 +79,14 @@ class NNAgent:
         return self.__portfolio_value
 
     @property
+    def future_price(self):
+        return self.__future_price
+
+    @property
+    def future_omega(self):
+        return self.__future_omega
+
+    @property
     def loss(self):
         return self.__loss
 

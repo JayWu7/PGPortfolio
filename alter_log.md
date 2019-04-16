@@ -323,3 +323,9 @@ total assets are 388.794596 BTC
 Total commission cost is: 306.5773426398393 BTC
 All the Tasks are Over,total time cost is 2525.045242547989 s
 ```
+
+
+***
+## 13. 交易步数 steps
+和 _训练步数_ 无关  
+与 _时间区间_ 的 _长度_ 成正比
