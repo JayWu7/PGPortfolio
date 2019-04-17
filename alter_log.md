@@ -107,6 +107,39 @@
    ```
 ***       
 ## 6. 输出交易详细信息
+在trader.py中添加了 _log_trade_detail 函数，并在backtest.py中实现了它:
+
+```buildoutcfg
+    def _log_trade_detail(self, last, omega, capital):
+        coins = ['BTC'] + self._coin_name_list
+        for la, om, co in zip(last, omega, coins):
+            if la > om:  # 有卖出
+                sell = (la - om) * capital
+                logging.info("  Selling {} btc's {}, the weight decreases from {} to {}".format(sell, co, la, om))
+            elif la < om:  # 有加持
+                buy = (om - la) * capital
+                logging.info("  Buying {} btc's {}, the weight increases from {} to {}".format(buy, co, la, om))
+            else:  # 持仓不变
+                logging.info("  Holding *{}* positions}".format(co))
+```
+
+输出具体格式为：
+```
+the step is 371
+  Selling 0.0032258535891411264 btc's BTC, the weight decreases from 0.006600779195176717 to 0.0034243809059262276
+  Selling 0.0004171844029188331 btc's reversed_USDT, the weight decreases from 0.0005244516425463704 to 0.00011366305989213288
+  Selling 0.004129913609985584 btc's LTC, the weight decreases from 0.004473122492973885 to 0.000406524253776297
+  Selling 0.0005725732918422156 btc's ETH, the weight decreases from 0.0006856999870295666 to 0.0001219047699123621
+  Selling 0.0005362307910579191 btc's XRP, the weight decreases from 0.0006335237366635554 to 0.00010551385639701039
+  Selling 0.00045872997917973193 btc's reversed_USDC, the weight decreases from 0.0005843928532877593 to 0.0001326956262346357
+  Selling 0.9833630604278185 btc's BCHABC, the weight decreases from 0.9820833368420274 to 0.013796135783195496
+  Selling 0.0007079052083389664 btc's STR, the weight decreases from 0.0009281862904140868 to 0.0002311339194420725
+  Selling 0.0008378759407920114 btc's XMR, the weight decreases from 0.0009360857947568807 to 0.00011105526209576055
+  Selling 0.0016690755565798708 btc's DASH, the weight decreases from 0.001949417188843328 to 0.0003059300943277776
+  Buying 0.9962765365160208 btc's BCHSV, the weight increases from 0.00011347395967079477 to 0.9811161756515503
+  Selling 0.0003580259712771655 btc's ZEC, the weight decreases from 0.00048753593475015015 to 0.00013499883061740547
+total assets are 1.050106 BTC
+```
 
 ***
 ## 7. 根据训练结果执行交易：

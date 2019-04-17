@@ -25,5 +25,6 @@ YEAR = DAY * 365
    # trading table name
 TABLE_NAME = 'test'
 
-#
+#initial btc value
 INIT_BTC = 1
+

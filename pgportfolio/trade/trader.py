@@ -89,6 +89,7 @@ class Trader:
         self._current_error_state = 'S000'
         starttime = time.time()
         omega = self._agent.decide_by_history(self.generate_history_matrix(), self._last_omega.copy())
+
         ## omega: numpy.ndarray 记录每个asset分配到的BTC的比例，和为1  len=12
         self.trade_by_strategy(omega)
         if self._agent_type == "nn":
@@ -104,6 +105,7 @@ class Trader:
         return self._period - trading_time
 
     def start_trading(self):
+
         try:
             if not self.__class__.__name__ == "BackTest":
                 current = int(time.time())
@@ -125,3 +127,6 @@ class Trader:
     def _calculate_total_commission_fee(self, rate, value):  # 计算累积commission
         commission_cost = (1 - rate) * value * self._total_capital  # commission cost
         self._total_commission_cost += commission_cost  # calculate the cumulative commission fee
+
+    def _log_trade_detail(self, last, omega, capital):  # 打印详细交易信息
+        pass

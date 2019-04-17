@@ -52,15 +52,14 @@ class TraderTrainer:
         self.__coin_number = self.input_config["coin_number"] # 11
         self.__batch_size = self.train_config["batch_size"]  # 109  批量大小
         self.__snap_shot = self.train_config["snap_shot"]
-        config["input"]["fake_data"] = fake_data  #?
+        config["input"]["fake_data"] = fake_data
 
         self._matrix = DataMatrices.create_from_config(config)
-
         self.test_set = self._matrix.get_test_set()
         if not config["training"]["fast_train"]:
             self.training_set = self._matrix.get_training_set()  # 获得训练集
-        self.upperbound_validation = 1  #
-        self.upperbound_test = 1  #
+        self.upperbound_validation = 1
+        self.upperbound_test = 1
         tf.set_random_seed(self.config["random_seed"])
         self.device = device
         if agent:
