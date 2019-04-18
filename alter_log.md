@@ -173,6 +173,60 @@ total assets are 1.050106 BTC
         else:
             return False
 ```
+
+增加 _**download_helper**_ 函数，如果一次下载的数据量过大，自动将所需的数据分开下载：
+```buildoutcfg
+ def download_helper(self, url, divide=2):
+        tup = urlparse(url)
+        query = parse_qs(tup.query)
+        start = int(query['start'][0])
+        end = int(query['end'][0])
+        per = (end - start) // divide
+        jsons = []
+        for _ in range(divide):
+            mid = start + per
+            query['end'] = [str(mid)]
+            str_query = urlencode(query, doseq=True)
+            new_url = urlunparse(tup._replace(query=str_query))  # namedtuple alter the attribute)
+            conn = urlopen(Request(new_url))  # 60s没打开则超时
+            json_str = json.loads(conn.read().decode(encoding='UTF-8'))
+            if 'error' in json_str and len(json_str) == 1:
+                return False  # 按照当前divide 分开抓取数据，仍然出错
+            jsons.append(json_str)
+            start = mid + 300
+            query['start'] = [str(start)]
+        return [item for json in jsons for item in json]
+```
+修改***api***函数，调用 _**download_helper**_ ，使得理论上可以下载任意长时间段的数据,修改后为：
+```buildoutcfg
+    def api(self, command, args={}):
+        """
+        returns 'False' if invalid command or if no APIKey or Secret is specified (if command is "private")
+        returns {"error":"<error message>"} if API error
+        """
+        if command in PUBLIC_COMMANDS:
+            url = 'https://poloniex.com/public?'
+            args['command'] = command
+            url = url + urlencode(args)
+            try:
+                self.conn = urlopen(Request(url), timeout=60)  # 60s没打开则超时
+            except URLError:
+                raise URLError('connect {} error!'.format(url))
+            except socket.timeout:
+                raise socket.timeout('The read json file operation timed out')
+            else:  # no exception
+                json_str = json.loads(self.conn.read().decode(encoding='UTF-8'))
+                if 'error' in json_str and len(json_str) == 1:
+                    for div in range(2, 10):
+                        json_str = self.download_helper(url, div)
+                        if json_str:  # != False
+                            break
+                    else:
+                        raise ValueError('Data requested is too large, url is {}'.format(url))
+                return json_str
+        else:
+            return False
+```
 ***
 ## 11. 修改一个关键参数：
 之前因为数据下载失败，将**_/pgportfolio/marketdata/globaldatamatrix.py_**中：
