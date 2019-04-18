@@ -68,12 +68,8 @@ class BackTest(trader.Trader):
     def trade_by_strategy(self, omega):  ## important
         logging.info("the step is {}".format(self._steps))
         logging.debug("the raw omega is {}".format(omega))
-        #  self.__get_matrix_y()  # [1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]     len=11
         future_price = np.concatenate((np.ones(1), self.__get_matrix_y()))
-        # future_price # [1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]  len=12
-        # 计算手续费
-        pv_after_commission = calculate_pv_after_commission(omega, self._last_omega, self._commission_rate)
-        # new portfolio value rate,after training and cut commission fee
+        pv_after_commission = calculate_pv_after_commission(omega, self._last_omega, self._commission_rate)  # 计算手续费
         value_after_training = np.dot(omega, future_price)  # calculate the new value(without commission)
         portfolio_change = pv_after_commission * value_after_training  # >1 means portfolio value added
         self._calculate_total_commission_fee(pv_after_commission, value_after_training)  # 计算累积commission
