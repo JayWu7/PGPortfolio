@@ -105,7 +105,6 @@ class Trader:
         return self._period - trading_time
 
     def start_trading(self):
-
         try:
             if not self.__class__.__name__ == "BackTest":
                 current = int(time.time())

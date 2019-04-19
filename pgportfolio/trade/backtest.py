@@ -92,4 +92,4 @@ class BackTest(trader.Trader):
                 buy = (om - la) * capital
                 logging.info("  Buying {} btc's {}, the weight increases from {} to {}".format(buy, co, la, om))
             else:  # 持仓不变
-                logging.info("  Holding *{}* positions}".format(co))
+                logging.info("  Holding *{}* positions".format(co))
