@@ -58,6 +58,13 @@ def main():
         else:
             for folder in options.folder:  # 未实现
                 raise NotImplementedError()
+    elif options.mode == "trade":   #实时交易
+        import pgportfolio.autotrain.training as training
+        if not options.algo:
+            training.train_all(int(options.processes), options.device, online_trade=True)
+        else:
+            for folder in options.folder:  # 未实现
+                raise NotImplementedError()
     elif options.mode == "generate":
         import pgportfolio.autotrain.generate as generate
         logging.basicConfig(level=logging.INFO)

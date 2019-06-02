@@ -35,14 +35,15 @@ class DataMatrices:
         self.__end = int(end)
 
         # assert window_size >= MIN_NUM_PERIOD
-        self.__coin_no = coin_filter # 11
+        self.__coin_no = coin_filter  # 11
         type_list = get_type_list(feature_number)  # 生成训练特征
         self.__features = type_list
         self.feature_number = feature_number
         volume_forward = get_volume_forward(self.__end - start, test_portion, portion_reversed)  # 获取之前的交易量 a num
         self.__history_manager = gdm.HistoryManager(coin_number=coin_filter, end=self.__end,
                                                     volume_average_days=volume_average_days,
-                                                    volume_forward=volume_forward, online=online)  # 历史交易管理
+                                                    volume_forward=volume_forward,
+                                                    online=online)  # 历史交易管理(一个月的数据，用来选择coins)
         if market == "poloniex":
             self.__global_data = self.__history_manager.get_global_panel(start,
                                                                          self.__end,
@@ -54,8 +55,9 @@ class DataMatrices:
         self.__period_length = period  # 1800
         # portfolio vector memory, [time, assets]
         self.__PVM = pd.DataFrame(index=self.__global_data.minor_axis,
-                                  columns=self.__global_data.major_axis) # Portfolio-Vector Memory
-        self.__PVM = self.__PVM.fillna(1.0 / self.__coin_no)   #填充缺失值
+                                  columns=self.__global_data.major_axis)  # Portfolio-Vector Memory
+        self.__PVM = self.__PVM.fillna(1.0 / self.__coin_no)  # 填充缺失值
+        #  the PVM is a stack of portfolio vectors in chronological order
 
         self._window_size = window_size
         self._num_periods = len(self.__global_data.minor_axis)
@@ -101,11 +103,11 @@ class DataMatrices:
                             window_size=input_config["window_size"],
                             online=input_config["online"],
                             period=input_config["global_period"],
-                            coin_filter=input_config["coin_number"],  #11
+                            coin_filter=input_config["coin_number"],  # 11
                             is_permed=input_config["is_permed"],
                             buffer_bias_ratio=train_config["buffer_biased"],
                             batch_size=train_config["batch_size"],
-                            volume_average_days=input_config["volume_average_days"], #30
+                            volume_average_days=input_config["volume_average_days"],  # 30
                             test_portion=input_config["test_portion"],
                             portion_reversed=input_config["portion_reversed"],
                             )
@@ -141,6 +143,7 @@ class DataMatrices:
         self.__replay_buffer.append_experience(appended_index)
 
     def get_test_set(self):
+        # self.test_indices   测试时间区间 下标
         return self.__pack_samples(self.test_indices)
 
     def get_training_set(self):
@@ -187,7 +190,9 @@ class DataMatrices:
             indices = np.arange(self._num_periods)
             self._train_ind, self._test_ind = np.split(indices, portion_split)
 
+        self._train_ind = np.concatenate((self._train_ind,self._test_ind))  #训练所有数据
         self._train_ind = self._train_ind[:-(self._window_size + 1)]
+
         # NOTE(zhengyao): change the logic here in order to fit both
         # reversed and normal version
         self._train_ind = list(self._train_ind)

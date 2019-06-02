@@ -120,7 +120,7 @@
                 buy = (om - la) * capital
                 logging.info("  Buying {} btc's {}, the weight increases from {} to {}".format(buy, co, la, om))
             else:  # 持仓不变
-                logging.info("  Holding *{}* positions}".format(co))
+                logging.info("  Holding *{}* positions".format(co))
 ```
 
 输出具体格式为：
@@ -416,3 +416,27 @@ All the Tasks are Over,total time cost is 2525.045242547989 s
 ## 13. 交易步数 steps
 和 _训练步数_ 无关  
 与 _时间区间_ 的 _长度_ 成正比
+
+***
+## 14. 交易测试 时间区间确定方法：
+* a. 将开始时间和终止时间转化为Unix时间戳，以t_s 和 t_e 表示
+* b. span = t_e - t_s
+* c. span * test_portion(默认为0.08) => 交易测试的区间长度 trade_span
+* d. 交易测试的开始时间： t_e - trade_span
+* e. 选择coins的时间区间为交易测试开始时间的前一个月
+
+***
+## 15. 交易 coins
+修改 *globaldatamatrix.py* 中的第59-62行
+将交易coins 固定为：   
+`['ETH', 'EOS', 'XRP', 'ATOM', 'LTC', 'ETC', 'XMR', 'DASH', 'ZEC', 'BCHABC', 'BAT']`   
+
+**reasons：**
+这11个coin，是在poloniex和huobi中交易量都排在前面的虚拟货币
+
+***
+## 16.训练数据集
+修改 *datamatrices.py* 中的第193行，训练所有数据,即从开始时间到结束时间的所有数据
+
+修改 *globaldatamatrix.py* 中的第61 行， 将end设置为最近的一个30分时间。
+

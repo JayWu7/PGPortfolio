@@ -6,9 +6,9 @@ import logging
 from pgportfolio.tools.trade import calculate_pv_after_commission
 
 
-class BackTest(trader.Trader):
+class HuobiTrader(trader.Trader):
     def __init__(self, config, net_dir=None, agent=None, agent_type="nn", init_BTC=1):
-        trader.Trader.__init__(self, 0, config, 0, net_dir,
+        trader.Trader.__init__(self, 1800, config, 0, net_dir,
                                initial_BTC=init_BTC, agent=agent, agent_type=agent_type)
         if agent_type == "nn":
             data_matrices = self._rolling_trainer.data_matrices
@@ -66,31 +66,5 @@ class BackTest(trader.Trader):
         return inputs
 
     def trade_by_strategy(self, omega):  ## important
-        logging.info("the step is {}".format(self._steps))
-        logging.debug("the raw omega is {}".format(omega))
-        future_price = np.concatenate((np.ones(1), self.__get_matrix_y()))
-
-        pv_after_commission = calculate_pv_after_commission(omega, self._last_omega, self._commission_rate)  # 计算手续费
-        value_after_training = np.dot(omega, future_price)  # calculate the new value(without commission)
-        portfolio_change = pv_after_commission * value_after_training  # >1 means portfolio value added
-        self._calculate_total_commission_fee(pv_after_commission, value_after_training)  # 计算累积commission
-        self._log_trade_detail(self._last_omega, omega, self._total_capital)  # 打印详细交易信息
-        self._total_capital *= portfolio_change  # new portfolio value
-
-        self._last_omega = pv_after_commission * omega * \
-                           future_price / \
-                           portfolio_change
-        logging.debug("the portfolio change this period is : {}".format(portfolio_change))
-        self.__test_pc_vector.append(portfolio_change)
-
-    def _log_trade_detail(self, last, omega, capital):
-        coins = ['BTC'] + self._coin_name_list
-        for la, om, co in zip(last, omega, coins):
-            if la > om:  # 有卖出
-                sell = (la - om) * capital
-                logging.info("  Selling {} btc's {}, the weight decreases from {} to {}".format(sell, co, la, om))
-            elif la < om:  # 有加持
-                buy = (om - la) * capital
-                logging.info("  Buying {} btc's {}, the weight increases from {} to {}".format(buy, co, la, om))
-            else:  # 持仓不变
-                logging.info("  Holding *{}* positions".format(co))
+        print(omega)
+        print(11111111111111111111111111111111111111)

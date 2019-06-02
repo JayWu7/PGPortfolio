@@ -10,7 +10,8 @@ from pgportfolio.constants import *
 import sqlite3
 from datetime import datetime
 import logging
-from  sqlite3 import IntegrityError
+from sqlite3 import IntegrityError
+import time
 
 class HistoryManager:
     # if offline ,the coin_list could be None
@@ -18,11 +19,11 @@ class HistoryManager:
     def __init__(self, coin_number, end, volume_average_days=1, volume_forward=0, online=True):
         self.initialize_db()  # 初始化History table
         self.__storage_period = FIVE_MINUTES  # keep this as 300
-        # self.__storage_period = DAY   #period修改成一天
         self._coin_number = coin_number
         self._online = online
         if self._online:
             self._coin_list = CoinList(end, volume_average_days, volume_forward)
+
         self.__volume_forward = volume_forward
         self.__volume_average_days = volume_average_days
         self.__coins = None
@@ -55,10 +56,15 @@ class HistoryManager:
         :return a panel, [feature, coin, time]
         """
         start = int(start - (start % period))
-        end = int(end - (end % period))
-        coins = self.select_coins(start=end - self.__volume_forward - self.__volume_average_days * DAY,
-                                  end=end - self.__volume_forward)
+        # end = int(end - (end % period))
+        cur = int(time.time())
+        end = cur - (cur % period)    #将end设置为最近的一个30分
+
+        # coins = self.select_coins(start=end - self.__volume_forward - self.__volume_average_days * DAY,
+        #                           end=end - self.__volume_forward)
+        coins = ['ETH', 'EOS', 'XRP', 'ATOM', 'LTC', 'ETC', 'XMR', 'DASH', 'ZEC', 'BCHABC', 'BAT']
         self.__coins = coins
+
         for coin in coins:
             self.update_data(start, end, coin)
 
@@ -69,16 +75,17 @@ class HistoryManager:
         logging.info("feature type list is %s" % str(features))
         self.__checkperiod(period)
 
-        time_index = pd.to_datetime(list(range(start, end + 1, period)), unit='s') #生成时间 index
-        panel = pd.Panel(items=features, major_axis=coins, minor_axis=time_index, dtype=np.float32) #三维面板
+        time_index = pd.to_datetime(list(range(start, end + 1, period)), unit='s')  # 生成时间 index
+
+        panel = pd.Panel(items=features, major_axis=coins, minor_axis=time_index, dtype=np.float32)  # 三维面板
 
         connection = sqlite3.connect(DATABASE_DIR)
         try:
             for row_number, coin in enumerate(coins):
                 for feature in features:
                     # NOTE: transform the start date to end date
-                    if feature == "close":   #收盘价格
-                        sql = ("SELECT date+{period} AS date_norm, close FROM History WHERE"  #此处将300改为period
+                    if feature == "close":  # 收盘价格
+                        sql = ("SELECT date+{period} AS date_norm, close FROM History WHERE"  # 此处将300改为period
                                " date_norm>={start} and date_norm<={end}"
                                " and date_norm%{period}=0 and coin=\"{coin}\"".format(
                             start=start, end=end, period=period, coin=coin))
@@ -123,7 +130,7 @@ class HistoryManager:
         return panel
 
     # select top coin_number of coins by volume from start to end
-    def select_coins(self, start, end):  #选择asset
+    def select_coins(self, start, end):  # 选择asset
         if not self._online:
             logging.info(
                 "select coins offline from %s to %s" % (datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M'),
@@ -172,24 +179,24 @@ class HistoryManager:
             cursor = connection.cursor()
             min_date = cursor.execute('SELECT MIN(date) FROM History WHERE coin=?;', (coin,)).fetchall()[0][0]
             max_date = cursor.execute('SELECT MAX(date) FROM History WHERE coin=?;', (coin,)).fetchall()[0][0]
-            #当前货币的最小最大日期
+            # 当前货币的最小最大日期
             if min_date == None or max_date == None:
                 self.__fill_data(start, end, coin, cursor)
             else:
-                fg = 10 * self.__storage_period    # 10 * 300
+                fg = 10 * self.__storage_period  # 10 * 300
                 if max_date + fg < end:
                     if not self._online:
                         raise Exception("Have to be online")
                     self.__fill_data(max_date + self.__storage_period, end, coin, cursor)
                 if min_date > start and self._online:
-                    self.__fill_data(start, min_date - self.__storage_period - 1, coin, cursor)   #此句有问题
+                    self.__fill_data(start, min_date - self.__storage_period - 1, coin, cursor)  # 此句有问题
 
             # if there is no data
         finally:
             connection.commit()
             connection.close()
 
-    def __fill_data(self, start, end, coin, cursor):  #补充数据
+    def __fill_data(self, start, end, coin, cursor):  # 补充数据
         chart = self._coin_list.get_chart_until_success(
             pair=self._coin_list.allActiveCoins.at[coin, 'pair'],
             start=start,
@@ -197,10 +204,6 @@ class HistoryManager:
             period=self.__storage_period)
         logging.info("fill %s data from %s to %s" % (coin, datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M'),
                                                      datetime.fromtimestamp(end).strftime('%Y-%m-%d %H:%M')))
-        #获取chart此处有错误，如果一次请求的数据太多，会返回error
-        #{'error': 'Data requested is too large. Please specify a longer period or a shorter date range, or use resolution=auto to automatically calculate the shortest supported period for your date range.'}
-        #如果chart不是list类型，则表明出错
-        # assert isinstance(chart,list),'chart is a {},not a list,{}'.format(type(chart),chart)
         for c in chart:
             if c["date"] > 0:
                 if c['weightedAverage'] == 0:

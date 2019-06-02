@@ -10,7 +10,7 @@ from pgportfolio.learn.tradertrainer import TraderTrainer
 from pgportfolio.tools.configprocess import load_config
 
 
-def train_one(save_path, config, log_file_dir, index, logfile_level, console_level, device):
+def train_one(save_path, config, log_file_dir, index, logfile_level, console_level, device, online_trade):
     """
     train an agent
     :param save_path: the path to save the tensorflow model (.ckpt), could be None
@@ -31,9 +31,9 @@ def train_one(save_path, config, log_file_dir, index, logfile_level, console_lev
         console.setLevel(console_level)
         logging.getLogger().addHandler(console)
     print("training at %s started" % index)
-    return TraderTrainer(config, save_path=save_path, device=device).train_net(log_file_dir=log_file_dir, index=index)
+    return TraderTrainer(config, save_path=save_path, device=device, online_trade = online_trade).train_net(log_file_dir=log_file_dir, index=index)
 
-def train_all(processes=1, device="cpu"):
+def train_all(processes=1, device="cpu",online_trade = False):
     """
     train all the agents in the train_package folders
 
@@ -65,7 +65,7 @@ def train_all(processes=1, device="cpu"):
                 "./" + train_dir + "/" + dir + "/netfile",
                 load_config(dir),
                 "./" + train_dir + "/" + dir + "/tensorboard",
-                dir, logfile_level, console_level, device))
+                dir, logfile_level, console_level, device, online_trade))
             p.start()
             pool.append(p)
         else:

@@ -31,7 +31,7 @@ Result = collections.namedtuple("Result",
 
 class TraderTrainer:
     def __init__(self, config, fake_data=False, restore_dir=None, save_path=None, device="cpu",
-                 agent=None):
+                 agent=None, online_trade = False):
         """
         :param config: config dictionary
         :param fake_data: if True will use data generated randomly
@@ -45,6 +45,7 @@ class TraderTrainer:
         self.train_config = config["training"]
         self.input_config = config["input"]
         self.save_path = save_path
+        self.online_trade = online_trade
         self.best_metric = 0
         np.random.seed(config["random_seed"]) # control to have the same random output with the same seed
 
@@ -56,6 +57,7 @@ class TraderTrainer:
 
         self._matrix = DataMatrices.create_from_config(config)
         self.test_set = self._matrix.get_test_set()
+
         if not config["training"]["fast_train"]:
             self.training_set = self._matrix.get_training_set()  # 获得训练集
         self.upperbound_validation = 1
@@ -210,10 +212,11 @@ class TraderTrainer:
         logging.warning('the portfolio value train No.%s is %s log_mean is %s,'
                         ' the training time is %d seconds' % (index, pv, log_mean, time.time() - starttime))
 
-        return self.__log_result_csv(index, time.time() - starttime)
+        return self.__log_result_csv(index, time.time() - starttime, self.online_trade)
 
-    def __log_result_csv(self, index, time):
+    def __log_result_csv(self, index, time, online_trade = False):
         from pgportfolio.trade.backtest import BackTest
+        from pgportfolio.trade.huobi_trade import HuobiTrader
         dataframe = None
         csv_dir = './train_package/train_summary.csv'
         tflearn.is_training(False, self._agent.session)
@@ -224,25 +227,28 @@ class TraderTrainer:
                            self._agent.pv_vector,
                            self._agent.log_mean_free)
 
-        backtest = BackTest(self.config.copy(),net_dir=None,agent=self._agent,init_BTC=init_BTC)
-
-        backtest.start_trading()
-        result = Result(test_pv=[v_pv],
-                        test_log_mean=[v_log_mean],
-                        test_log_mean_free=[v_log_mean_free],
-                        test_history=[''.join(str(e) + ', ' for e in benefit_array)],
-                        config=[json.dumps(self.config)],
-                        net_dir=[index],
-                        backtest_test_pv=[backtest.test_pv],
-                        backtest_test_history=[''.join(str(e) + ', ' for e in backtest.test_pc_vector)],
-                        backtest_test_log_mean=[np.mean(np.log(backtest.test_pc_vector))],
-                        training_time=int(time))
-        new_data_frame = pd.DataFrame(result._asdict()).set_index("net_dir")
-        if os.path.isfile(csv_dir):
-            dataframe = pd.read_csv(csv_dir).set_index("net_dir")
-            dataframe = dataframe.append(new_data_frame)
+        if online_trade:
+            huobi = HuobiTrader(self.config.copy(), net_dir=None, agent=self._agent, init_BTC=init_BTC)
+            huobi.start_trading()
         else:
-            dataframe = new_data_frame
-        if int(index) > 0:
-            dataframe.to_csv(csv_dir)
-        return result
+            backtest = BackTest(self.config.copy(),net_dir=None,agent=self._agent,init_BTC=init_BTC)
+            backtest.start_trading()
+            result = Result(test_pv=[v_pv],
+                            test_log_mean=[v_log_mean],
+                            test_log_mean_free=[v_log_mean_free],
+                            test_history=[''.join(str(e) + ', ' for e in benefit_array)],
+                            config=[json.dumps(self.config)],
+                            net_dir=[index],
+                            backtest_test_pv=[backtest.test_pv],
+                            backtest_test_history=[''.join(str(e) + ', ' for e in backtest.test_pc_vector)],
+                            backtest_test_log_mean=[np.mean(np.log(backtest.test_pc_vector))],
+                            training_time=int(time))
+            new_data_frame = pd.DataFrame(result._asdict()).set_index("net_dir")
+            if os.path.isfile(csv_dir):
+                dataframe = pd.read_csv(csv_dir).set_index("net_dir")
+                dataframe = dataframe.append(new_data_frame)
+            else:
+                dataframe = new_data_frame
+            if int(index) > 0:
+                dataframe.to_csv(csv_dir)
+            return result
