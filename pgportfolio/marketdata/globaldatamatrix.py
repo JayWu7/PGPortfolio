@@ -12,6 +12,7 @@ from datetime import datetime
 import logging
 from sqlite3 import IntegrityError
 import time
+from pgportfolio.constants import TRADE_COINS
 
 class HistoryManager:
     # if offline ,the coin_list could be None
@@ -62,7 +63,7 @@ class HistoryManager:
 
         # coins = self.select_coins(start=end - self.__volume_forward - self.__volume_average_days * DAY,
         #                           end=end - self.__volume_forward)
-        coins = ['ETH', 'EOS', 'XRP', 'ATOM', 'LTC', 'ETC', 'XMR', 'DASH', 'ZEC', 'BCHABC', 'BAT']
+        coins = TRADE_COINS
         self.__coins = coins
 
         for coin in coins:

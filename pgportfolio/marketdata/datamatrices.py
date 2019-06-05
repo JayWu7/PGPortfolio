@@ -49,6 +49,10 @@ class DataMatrices:
                                                                          self.__end,
                                                                          period=period,
                                                                          features=type_list)
+            # 'pandas.core.panel.Panel
+            # Major_axis: coins
+            # Minor_axis: Time
+            # Item_axis: close, high, low
         # 添加新的market
         else:
             raise ValueError("market {} is not valid".format(market))
@@ -57,12 +61,12 @@ class DataMatrices:
         self.__PVM = pd.DataFrame(index=self.__global_data.minor_axis,
                                   columns=self.__global_data.major_axis)  # Portfolio-Vector Memory
         self.__PVM = self.__PVM.fillna(1.0 / self.__coin_no)  # 填充缺失值
+        # pd.DataFrame
         #  the PVM is a stack of portfolio vectors in chronological order
 
         self._window_size = window_size
-        self._num_periods = len(self.__global_data.minor_axis)
-        self.__divide_data(test_portion, portion_reversed)
-
+        self._num_periods = len(self.__global_data.minor_axis)  # peroids的数量
+        self.__divide_data(test_portion, portion_reversed)  # 分割数据，将数据分为 train set 和 test set
         self._portion_reversed = portion_reversed
         self.__is_permed = is_permed
 
@@ -79,7 +83,7 @@ class DataMatrices:
         logging.info("the number of training examples is %s"
                      ", of test examples is %s" % (self._num_train_samples, self._num_test_samples))
         logging.debug("the training set is from %s to %s" % (min(self._train_ind), max(self._train_ind)))
-        logging.debug("the test set is from %s to %s" % (min(self._test_ind), max(self._test_ind)))
+        # logging.debug("the test set is from %s to %s" % (min(self._test_ind), max(self._test_ind)))
 
     @property
     def global_weights(self):
@@ -143,7 +147,8 @@ class DataMatrices:
         self.__replay_buffer.append_experience(appended_index)
 
     def get_test_set(self):
-        # self.test_indices   测试时间区间 下标
+        # self.test_indices   测试时间区间 下标(以period的数字号作为下标)
+        # class: numpy.ndarray  [int]
         return self.__pack_samples(self.test_indices)
 
     def get_training_set(self):
@@ -166,15 +171,16 @@ class DataMatrices:
         def setw(w):
             self.__PVM.iloc[indexs, :] = w
 
-        M = [self.get_submatrix(index) for index in indexs]
+        M = [self.get_submatrix(index) for index in indexs]  # 获得子数据，并转为numpy.array
         M = np.array(M)
         X = M[:, :, :, :-1]
         y = M[:, :, :, -1] / M[:, 0, None, :, -2]
-        return {"X": X, "y": y, "last_w": last_w, "setw": setw}
+        samples = {"X": X, "y": y, "last_w": last_w, "setw": setw}
+        return samples
 
     # volume in y is the volume in next access period
     def get_submatrix(self, ind):
-        return self.__global_data.values[:, :, ind:ind + self._window_size + 1]
+        return self.__global_data.values[:, :, ind:ind + self._window_size + 1]  # （最近的数据在最前面），获取近一个月的数据
 
     def __divide_data(self, test_portion, portion_reversed):
         train_portion = 1 - test_portion
@@ -190,7 +196,7 @@ class DataMatrices:
             indices = np.arange(self._num_periods)
             self._train_ind, self._test_ind = np.split(indices, portion_split)
 
-        self._train_ind = np.concatenate((self._train_ind,self._test_ind))  #训练所有数据
+        self._train_ind = np.concatenate((self._train_ind, self._test_ind))  # 训练所有数据
         self._train_ind = self._train_ind[:-(self._window_size + 1)]
 
         # NOTE(zhengyao): change the logic here in order to fit both

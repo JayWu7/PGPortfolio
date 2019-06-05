@@ -85,23 +85,8 @@ class Trader:
         """
         pass
 
-    def __trade_body(self):
-        self._current_error_state = 'S000'
-        starttime = time.time()
-        omega = self._agent.decide_by_history(self.generate_history_matrix(), self._last_omega.copy())
-        ## omega: numpy.ndarray 记录每个asset分配到的BTC的比例，和为1  len=12
-        self.trade_by_strategy(omega)
-        if self._agent_type == "nn":
-            self.rolling_train()
-        if not self.__class__.__name__ == "BackTest":
-            self._last_omega = omega.copy()
-        logging.info('total assets are %3f BTC' % self._total_capital)
-        logging.debug("=" * 30)
-        trading_time = time.time() - starttime
-        if trading_time < self._period:
-            logging.info("sleep for %s seconds" % (self._period - trading_time))
-        self._steps += 1
-        return self._period - trading_time
+    def _trade_body(self):
+        pass
 
     def start_trading(self):
         try:
@@ -111,12 +96,13 @@ class Trader:
                 logging.info("sleep for %s seconds" % wait)
                 time.sleep(wait + 2)
 
-                while self._steps < self._total_steps:
-                    sleeptime = self.__trade_body()
+                # while self._steps < self._total_steps:
+                while True:    # 理论上一直运行
+                    sleeptime = self._trade_body()
                     time.sleep(sleeptime)
             else:  # when run process, go to this branch
                 while self._steps < self._total_steps:
-                    self.__trade_body()
+                    self._trade_body()
         finally:
             if self._agent_type == "nn":
                 self._agent.recycle()

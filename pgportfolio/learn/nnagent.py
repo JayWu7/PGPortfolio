@@ -215,10 +215,11 @@ class NNAgent:
 
     # the history is a 3d matrix, return a asset vector
     def decide_by_history(self, history, last_w):
+        # history   class: numpy.ndarray    shape: (3,11,31)
         assert isinstance(history, np.ndarray), \
             "the history should be a numpy array, not %s" % type(history)
         assert not np.any(np.isnan(last_w))
-        assert not np.any(np.isnan(history))
+        assert not np.any(np.isnan(history))   # make sure there is no Nan in the input data
         tflearn.is_training(False, self.session)
         history = history[np.newaxis, :, :, :]
         return np.squeeze(self.session.run(self.__net.output, feed_dict={self.__net.input_tensor: history,

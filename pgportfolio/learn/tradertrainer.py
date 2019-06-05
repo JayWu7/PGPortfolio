@@ -15,6 +15,7 @@ from pgportfolio.learn.nnagent import NNAgent
 from pgportfolio.marketdata.datamatrices import DataMatrices
 import logging
 from ..constants import INIT_BTC as init_BTC
+
 Result = collections.namedtuple("Result",
                                 [
                                     "test_pv",
@@ -31,7 +32,7 @@ Result = collections.namedtuple("Result",
 
 class TraderTrainer:
     def __init__(self, config, fake_data=False, restore_dir=None, save_path=None, device="cpu",
-                 agent=None, online_trade = False):
+                 agent=None, online_trade=False):
         """
         :param config: config dictionary
         :param fake_data: if True will use data generated randomly
@@ -47,10 +48,10 @@ class TraderTrainer:
         self.save_path = save_path
         self.online_trade = online_trade
         self.best_metric = 0
-        np.random.seed(config["random_seed"]) # control to have the same random output with the same seed
+        np.random.seed(config["random_seed"])  # control to have the same random output with the same seed
 
         self.__window_size = self.input_config["window_size"]  # 31
-        self.__coin_number = self.input_config["coin_number"] # 11
+        self.__coin_number = self.input_config["coin_number"]  # 11
         self.__batch_size = self.train_config["batch_size"]  # 109  批量大小
         self.__snap_shot = self.train_config["snap_shot"]
         config["input"]["fake_data"] = fake_data
@@ -93,9 +94,9 @@ class TraderTrainer:
             total = total * i
         return total
 
-    def log_between_steps(self, step):
+    def log_between_steps(self, step):  #每1000步执行一次
         fast_train = self.train_config["fast_train"]
-        tflearn.is_training(False, self._agent.session)
+        tflearn.is_training(False, self._agent.session)  #return true if is training
 
         summary, v_pv, v_log_mean, v_loss, log_mean_free, weights = \
             self._evaluate("test", self.summary,
@@ -214,7 +215,7 @@ class TraderTrainer:
 
         return self.__log_result_csv(index, time.time() - starttime, self.online_trade)
 
-    def __log_result_csv(self, index, time, online_trade = False):
+    def __log_result_csv(self, index, time, online_trade=False):
         from pgportfolio.trade.backtest import BackTest
         from pgportfolio.trade.huobi_trade import HuobiTrader
         dataframe = None
@@ -231,7 +232,7 @@ class TraderTrainer:
             huobi = HuobiTrader(self.config.copy(), net_dir=None, agent=self._agent, init_BTC=init_BTC)
             huobi.start_trading()
         else:
-            backtest = BackTest(self.config.copy(),net_dir=None,agent=self._agent,init_BTC=init_BTC)
+            backtest = BackTest(self.config.copy(), net_dir=None, agent=self._agent, init_BTC=init_BTC)
             backtest.start_trading()
             result = Result(test_pv=[v_pv],
                             test_log_mean=[v_log_mean],
