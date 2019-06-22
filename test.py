@@ -39,14 +39,23 @@
 # print(en - st)
 from huobi.requstclient import RequestClient
 from huobi.model.account import Account
-from huobi.model import AccountType,OrderType,OrderState
-from huobi.model import Balance
+from huobi.model import AccountType, OrderType, OrderState
+from huobi.model import Balance, CandlestickInterval
+from huobi.model.order import Order
 import os
 
-request = RequestClient()
-request.get_exchange_info()
+# api_key = '495dcb66-1f8b0442-92ea42e9-rfhfg2mkl3'
+# secret_key = '58b07862-0c6faf4b-033c25c3-86454'
+# request = RequestClient(api_key=api_key, secret_key=secret_key)
 # bal = request.get_account_balance_by_account_type(AccountType.SPOT)
-# coins = ['btc','eth', 'eos', 'xrp', 'atom', 'ltc', 'etc', 'xmr', 'dash', 'zec', 'bch', 'bat']
+# coins = ['btc', 'eth', 'eos', 'xrp', 'atom', 'ltc', 'etc', 'xmr', 'dash', 'zec', 'bch', 'bat']
+#
+# a = request.get_last_trade('batbtc')
+# print(a)
+
+# cand = request.get_candlestick('batbtc', CandlestickInterval.MIN30, 10)
+# print(cand)
+
 # for cur in bal.balances:
 #     if cur.currency in coins and cur.balance_type == 'trade':
 #         print(cur.currency)
@@ -66,6 +75,28 @@ request.get_exchange_info()
 # print(trade.price)
 # print(trade.direction)
 
-orders = request.get_historical_orders('etcbtc',OrderType)
+# orders = request.get_historical_orders('dashbtc', OrderState.PARTIAL_FILLED, OrderType.BUY_LIMIT)
+# for order in orders:
+#     symbol = order.symbol
+#     print(order.amount)
+#     print(order.price)
+#     print(order.order_id)
+#     print(order.filled_amount)
+#     print(order.filled_cash_amount)
+#     print(order.filled_fees)
+#     print(order.state)
+#     id = order.order_id
+# # request.cancel_order(symbol, id)
+# # request.create_order(symbol='ltcbtc',account_type=AccountType.SPOT,order_type=OrderType.BUY_MARKET,amount=0.48273, price=None)
+# bal = request.get_account_balance_by_account_type(AccountType.SPOT)
+# btc_num = bal.get_balance('btc')[0].balance
+# print(btc_num)
 
-# request.create_order(symbol='ltcbtc',account_type=AccountType.SPOT,order_type=OrderType.BUY_MARKET,amount=0.48273, price=None)
+
+from pgportfolio.marketdata.poloniex import Poloniex
+polo = Poloniex()
+
+start = polo.marketChart(pair='BTC_XRP',period=1800,start=1560951000,end=1560951000+1800)
+print(start)
+print(start[0]['close'])
+print(type(start[0]))

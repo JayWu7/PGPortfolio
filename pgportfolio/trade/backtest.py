@@ -52,7 +52,7 @@ class BackTest(trader.Trader):
         pass
 
     def __get_matrix_X(self):
-        return self.__test_set["X"][-1]
+        return self.__test_set["X"][self._steps]
 
     def __get_matrix_y(self):
         return self.__test_set["y"][self._steps, 0, :]

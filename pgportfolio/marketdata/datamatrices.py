@@ -32,11 +32,13 @@ class DataMatrices:
         else the order is [test, validation, train]
         """
         start = int(start)
+        self.__start = start
         self.__end = int(end)
 
         # assert window_size >= MIN_NUM_PERIOD
         self.__coin_no = coin_filter  # 11
         type_list = get_type_list(feature_number)  # 生成训练特征
+        self.__type_list = type_list
         self.__features = type_list
         self.feature_number = feature_number
         volume_forward = get_volume_forward(self.__end - start, test_portion, portion_reversed)  # 获取之前的交易量 a num
@@ -63,7 +65,6 @@ class DataMatrices:
         self.__PVM = self.__PVM.fillna(1.0 / self.__coin_no)  # 填充缺失值
         # pd.DataFrame
         #  the PVM is a stack of portfolio vectors in chronological order
-
         self._window_size = window_size
         self._num_periods = len(self.__global_data.minor_axis)  # peroids的数量
         self.__divide_data(test_portion, portion_reversed)  # 分割数据，将数据分为 train set 和 test set
@@ -136,6 +137,10 @@ class DataMatrices:
     def num_test_samples(self):
         return self._num_test_samples
 
+    def _update_data_matrix(self):
+        self.__global_data = self.__history_manager._update_data_matrix(self.global_matrix)
+
+
     def append_experience(self, online_w=None):
         """
         :param online_w: (number of assets + 1, ) numpy array
@@ -173,10 +178,13 @@ class DataMatrices:
 
         M = [self.get_submatrix(index) for index in indexs]  # 获得子数据，并转为numpy.array
         M = np.array(M)
-        X = M[:, :, :, :-1]
+        X = M[:, :, :, 1:]
         y = M[:, :, :, -1] / M[:, 0, None, :, -2]
         samples = {"X": X, "y": y, "last_w": last_w, "setw": setw}
         return samples
+
+    def _get_current_prices_input(self):  #返回当前period的前window_size个period的价格信息
+        return self.__global_data.values[:, :, -self._window_size:]
 
     # volume in y is the volume in next access period
     def get_submatrix(self, ind):
@@ -196,11 +204,11 @@ class DataMatrices:
             indices = np.arange(self._num_periods)
             self._train_ind, self._test_ind = np.split(indices, portion_split)
 
-        self._train_ind = np.concatenate((self._train_ind, self._test_ind))  # 训练所有数据
+        # self._train_ind = np.concatenate((self._train_ind, self._test_ind))  # 训练所有数据
         self._train_ind = self._train_ind[:-(self._window_size + 1)]
-
         # NOTE(zhengyao): change the logic here in order to fit both
         # reversed and normal version
         self._train_ind = list(self._train_ind)
+
         self._num_train_samples = len(self._train_ind)
         self._num_test_samples = len(self.test_indices)

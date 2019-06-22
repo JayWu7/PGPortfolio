@@ -14,6 +14,7 @@ from sqlite3 import IntegrityError
 import time
 from pgportfolio.constants import TRADE_COINS
 
+
 class HistoryManager:
     # if offline ,the coin_list could be None
     # NOTE: return of the sqlite results is a list of tuples, each tuple is a row
@@ -28,6 +29,9 @@ class HistoryManager:
         self.__volume_forward = volume_forward
         self.__volume_average_days = volume_average_days
         self.__coins = None
+        self.end = end
+        self.period = None
+        self.features = None
 
     @property
     def coins(self):
@@ -59,12 +63,13 @@ class HistoryManager:
         start = int(start - (start % period))
         # end = int(end - (end % period))
         cur = int(time.time())
-        end = cur - (cur % period)    #将end设置为最近的一个30分
-
+        end = cur - (cur % period) - period  # 将end设置为当前最近的前一个30分
         # coins = self.select_coins(start=end - self.__volume_forward - self.__volume_average_days * DAY,
         #                           end=end - self.__volume_forward)
         coins = TRADE_COINS
         self.__coins = coins
+        self.period = period
+        self.features = features
 
         for coin in coins:
             self.update_data(start, end, coin)
@@ -77,7 +82,6 @@ class HistoryManager:
         self.__checkperiod(period)
 
         time_index = pd.to_datetime(list(range(start, end + 1, period)), unit='s')  # 生成时间 index
-
         panel = pd.Panel(items=features, major_axis=coins, minor_axis=time_index, dtype=np.float32)  # 三维面板
 
         connection = sqlite3.connect(DATABASE_DIR)
@@ -86,7 +90,7 @@ class HistoryManager:
                 for feature in features:
                     # NOTE: transform the start date to end date
                     if feature == "close":  # 收盘价格
-                        sql = ("SELECT date+{period} AS date_norm, close FROM History WHERE"  # 此处将300改为period
+                        sql = ("SELECT date+{period} AS date_norm, close FROM History WHERE"
                                " date_norm>={start} and date_norm<={end}"
                                " and date_norm%{period}=0 and coin=\"{coin}\"".format(
                             start=start, end=end, period=period, coin=coin))
@@ -123,12 +127,55 @@ class HistoryManager:
                     serial_data = pd.read_sql_query(sql, con=connection,
                                                     parse_dates=["date_norm"],
                                                     index_col="date_norm")
+
                     panel.loc[feature, coin, serial_data.index] = serial_data.squeeze()
                     panel = panel_fillna(panel, "both")
+
         finally:
             connection.commit()
             connection.close()
+
         return panel
+
+    def _update_data_matrix(self, panel):
+        # 更新global data，使数据包含当前最新period
+        cur = int(time.time())
+        end = cur - (cur % self.period)  # 将end设置为当前最近的一个30分
+        nti = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end))  # new time index
+        coins = self.__coins
+        if end > self.end:
+            current_data = np.ndarray((11, 3))  # 当前最新coin 信息
+            for row, coin in enumerate(coins):
+                chart = self._coin_list.get_chart_until_success(pair=self._coin_list.allActiveCoins.at[coin, 'pair'],
+                                                                start=end - self.period,
+                                                                end=end - 1,
+                                                                period=self.period)
+                coin_info = chart[0]
+                for col, feature in enumerate(self.features):
+                    current_data[row][col] = coin_info[feature]
+            self.end = end
+            panel.ix[:, :, nti] = pd.DataFrame(current_data, index=panel.major_axis, columns=panel.items)
+
+        return panel
+
+        # for row_number, coin in enumerate(coins):
+        #     for feature in self.features:
+        #         if feature == "close":
+        #             sql = 'select close from History where date = {date} and coin = \"{coin}\"'.format(date=end,
+        #                                                                                                coin=coin)
+        #         elif feature == "high":
+        #             sql = 'select high from History where date = {date} and coin = \"{coin}\"'.format(date=end,
+        #                                                                                               coin=coin)
+        #         elif feature == "low":
+        #             sql = 'select low from History where date = {date} and coin = \"{coin}\"'.format(date=end,
+        #                                                                                              coin=coin)
+        #         else:
+        #             msg = ("The feature %s is not supported" % feature)
+        #             logging.error(msg)
+        #             raise ValueError(msg)
+        #         serial_data = pd.read_sql_query(sql, con=connect, parse_dates=["date"], index_col=["date"])
+        #         panel.loc[feature, coin, serial_data.index] = serial_data.squeeze()
+        #         panel = panel_fillna(panel, 'both')
 
     # select top coin_number of coins by volume from start to end
     def select_coins(self, start, end):  # 选择asset
@@ -184,13 +231,14 @@ class HistoryManager:
             if min_date == None or max_date == None:
                 self.__fill_data(start, end, coin, cursor)
             else:
-                fg = 10 * self.__storage_period  # 10 * 300
-                if max_date + fg < end:
+                # fg = 1 * self.__storage_period  # 1 * 300
+                # if max_date + fg < end:
+                if max_date < end:
                     if not self._online:
                         raise Exception("Have to be online")
                     self.__fill_data(max_date + self.__storage_period, end, coin, cursor)
                 if min_date > start and self._online:
-                    self.__fill_data(start, min_date - self.__storage_period - 1, coin, cursor)  # 此句有问题
+                    self.__fill_data(start, min_date - self.__storage_period - 1, coin, cursor)
 
             # if there is no data
         finally:
@@ -198,6 +246,7 @@ class HistoryManager:
             connection.close()
 
     def __fill_data(self, start, end, coin, cursor):  # 补充数据
+        # pair = 'BTC_{}'.format(coin)
         chart = self._coin_list.get_chart_until_success(
             pair=self._coin_list.allActiveCoins.at[coin, 'pair'],
             start=start,
@@ -225,4 +274,5 @@ class HistoryManager:
                                         c['close'], c['volume'], c['quoteVolume'],
                                         weightedAverage))
                 except IntegrityError:  # may have the SQL Error
-                    print('{} has been in the database'.format(c['date']))
+                    # print('{} has been in the database'.format(c['date']))
+                    pass

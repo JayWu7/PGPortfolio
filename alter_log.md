@@ -424,6 +424,8 @@ All the Tasks are Over,total time cost is 2525.045242547989 s
 * c. span * test_portion(默认为0.08) => 交易测试的区间长度 trade_span
 * d. 交易测试的开始时间： t_e - trade_span
 * e. 选择coins的时间区间为交易测试开始时间的前一个月
+前边0.92的数据跑模型，后面0.08的数据，减去31个period用来生成price tensor，后面的部分作为交易使用
+
 
 ***
 ## 15. 交易 coins
@@ -431,6 +433,7 @@ All the Tasks are Over,total time cost is 2525.045242547989 s
 将交易coins 固定为：   
 `['ETH', 'EOS', 'XRP', 'ATOM', 'LTC', 'ETC', 'XMR', 'DASH', 'ZEC', 'BCHABC', 'BAT']`   
 
+修改coinlist.py 中的初始化代码，省略下载除交易coins之外的别的coin的信息
 **reasons：**
 这11个coin，是在poloniex和huobi中交易量都排在前面的虚拟货币
 
@@ -439,4 +442,5 @@ All the Tasks are Over,total time cost is 2525.045242547989 s
 修改 *datamatrices.py* 中的第193行，训练所有数据,即从开始时间到结束时间的所有数据
 
 修改 *globaldatamatrix.py* 中的第61 行， 将end设置为最近的一个30分时间。
+
 
