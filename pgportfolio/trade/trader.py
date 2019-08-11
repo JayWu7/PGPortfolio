@@ -94,13 +94,12 @@ class Trader:
                 current = int(time.time())
                 wait = self._period - (current % self._period)
                 logging.info("sleep for %s seconds" % wait)
-                time.sleep(wait + 2)
-
+                time.sleep(wait)
                 # while self._steps < self._total_steps:
                 while True:    # 理论上一直运行
                     sleeptime = self._trade_body()
                     time.sleep(sleeptime)
-            else:  # when run process, go to this branch
+            else:
                 while self._steps < self._total_steps:
                     self._trade_body()
         finally:

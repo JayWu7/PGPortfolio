@@ -44,15 +44,17 @@ from huobi.model import Balance, CandlestickInterval
 from huobi.model.order import Order
 import os
 
-# api_key = '495dcb66-1f8b0442-92ea42e9-rfhfg2mkl3'
-# secret_key = '58b07862-0c6faf4b-033c25c3-86454'
-# request = RequestClient(api_key=api_key, secret_key=secret_key)
+api_key = '495dcb66-1f8b0442-92ea42e9-rfhfg2mkl3'
+secret_key = '58b07862-0c6faf4b-033c25c3-86454'
+request = RequestClient(api_key=api_key, secret_key=secret_key)
+# a = request.create_order('ethbtc', AccountType.SPOT, OrderType.BUY_MARKET, amount=2, price=None)
 # bal = request.get_account_balance_by_account_type(AccountType.SPOT)
 # coins = ['btc', 'eth', 'eos', 'xrp', 'atom', 'ltc', 'etc', 'xmr', 'dash', 'zec', 'bch', 'bat']
 #
-# a = request.get_last_trade('batbtc')
-# print(a)
-
+a = request.get_last_trade('batbtc')
+print(a)
+request.c
+# request.create_order()
 # cand = request.get_candlestick('batbtc', CandlestickInterval.MIN30, 10)
 # print(cand)
 
@@ -93,10 +95,12 @@ import os
 # print(btc_num)
 
 
-from pgportfolio.marketdata.poloniex import Poloniex
-polo = Poloniex()
-
-start = polo.marketChart(pair='BTC_XRP',period=1800,start=1560951000,end=1560951000+1800)
-print(start)
-print(start[0]['close'])
-print(type(start[0]))
+# from pgportfolio.marketdata.poloniex import Poloniex
+# polo = Poloniex()
+#
+# start = polo.marketChart(pair='BTC_XRP',period=1800,start=1560951000,end=1560951000+1800)
+#
+#
+# print(start)
+# print(start[0]['close'])
+# print(type(start[0]))

@@ -27,8 +27,8 @@ class HuobiTrader(trader.Trader):
         self._total_steps = self.__test_length
         self.__test_pv = 1.0
         self.__test_pc_vector = []
-        api_key = '495dcb66-1f8b0442-92ea42e9-rfhfg2mkl3'
-        secret_key = '58b07862-0c6faf4b-033c25c3-86454'
+        api_key = ''   #add the api_key
+        secret_key = ''
         self.request_client = RequestClient(api_key=api_key, secret_key=secret_key)
         self.coins_name = self.__generate_huobi_coin_name()
         self._coins_value = {}  # store the coin and its value in btc
@@ -117,9 +117,10 @@ class HuobiTrader(trader.Trader):
         logging.debug("=" * 30)
         trading_time = time.time() - starttime
         if trading_time < self._period:
-            logging.info("sleep for %s seconds" % (self._period - trading_time))
+            sleep_time = self._period - trading_time
+            logging.info("sleep for %s seconds" % (sleep_time))
         self._steps += 1
-        return self._period - trading_time
+        return sleep_time
 
     def _trade_by_strategy(self, omega):  ## important
         logging.info("time is {}".format(time.asctime(time.localtime(time.time()))))
@@ -140,14 +141,14 @@ class HuobiTrader(trader.Trader):
         self.__start_huobi_order()
 
     def __start_huobi_order(self):  # 生成交易订单，开始交易
-        sell_symbols = []  # 储存卖出coin的symbol信息
+        # sell_symbols = []  # 储存卖出coin的symbol信息
         buy_symbols = []
         while self.sell_orders:
             sell_info = self.sell_orders.pop()
             symbol = sell_info[0] + 'btc'
-            sell_symbols.append(symbol)
+            # sell_symbols.append(symbol)
             self.__send_sell_order(sell_info[0], symbol, sell_info[1], sell_info[2])
-        self.__monitor_sell_order(sell_symbols)
+        # self.__monitor_sell_order(sell_symbols)
         while self.buy_orders:
             buy_info = self.buy_orders.pop()
             symbol = buy_info[0] + 'btc'
@@ -177,12 +178,16 @@ class HuobiTrader(trader.Trader):
             print('All sell orders have finished!')
             return None
 
-    def __monitor_buy_order(self, symbols):
-        time.sleep(10)
-        print('sleep 10 seconds for buy order to be trade.')
+    def __monitor_buy_order(self, symbols, index = 0):
+        print('sleep 60 seconds for buy order to be trade.')
+        time.sleep(60)
         res = []
         for symbol in symbols:
-            orders = self.request_client.get_historical_orders(symbol, OrderState.SUBMITTED, OrderType.BUY_LIMIT)
+            try:
+                orders = self.request_client.get_historical_orders(symbol, OrderState.SUBMITTED, OrderType.BUY_LIMIT)
+            except Exception as e:
+                print(e)
+                print('Get order {} went wrong!'.format(symbol))
             if orders:  # 此symbol order没有交易成功
                 order = orders[0]
                 try:  # 取消此order
@@ -193,11 +198,34 @@ class HuobiTrader(trader.Trader):
                 except Exception as e:  # 出错
                     print(e)
                     print('cancel buy order wrong, symbol is: {}'.format(symbol))
-        if res:
-            self.__monitor_buy_order(res)
+        if res and index < 3:
+            self.__monitor_buy_order(res, index + 1)
         else:
+            self.__cancel_all_order(symbols)
             print('All buy orders have finished!')
             return None
+
+    def __cancel_all_order(self, symbols):
+        for symbol in symbols:
+            try:
+                submitted = self.request_client.get_historical_orders(symbol, OrderState.SUBMITTED, OrderType.BUY_LIMIT)
+                if submitted:
+                    order = submitted[0]
+                else:
+                    part_filled = self.request_client.get_historical_orders(symbol, OrderState.PARTIAL_FILLED, OrderType.BUY_LIMIT)
+                    if part_filled:
+                        order = part_filled[0]
+                    else:
+                        order = None
+
+                if order:
+                    self.request_client.cancel_order(symbol, order.order_id)
+            except Exception as e:  # 出错
+                print(e)
+                print('cancel buy order wrong, symbol is: {}'.format(symbol))
+
+
+
 
     def __buy(self, coin, buy_btc_value, price):
         amount = buy_btc_value / price
@@ -271,7 +299,7 @@ class HuobiTrader(trader.Trader):
             print('sell {} {}, too little, Ignore'.format(amount, coin))
         else:
             try:
-                self.request_client.create_order(symbol, AccountType.SPOT, OrderType.SELL_LIMIT, amount, price)
+                self.request_client.create_order(symbol, AccountType.SPOT, OrderType.SELL_MARKET, amount, None)
             except Exception as e:
                 print(e)
                 print('this sell order went wrong, info: symbol-{},amount-{},price-{}'.format(symbol, amount, price))

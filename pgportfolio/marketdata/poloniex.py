@@ -71,7 +71,7 @@ class Poloniex:
             else:  # no exception
                 json_str = json.loads(self.conn.read().decode(encoding='UTF-8'))
                 if 'error' in json_str and len(json_str) == 1:
-                    for div in range(2, 10):
+                    for div in range(2, 20):
                         json_str = self.download_helper(url, div)
                         if json_str:  # != False
                             break
