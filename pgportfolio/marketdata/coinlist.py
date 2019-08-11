@@ -11,22 +11,23 @@ from pgportfolio.constants import *
 
 class CoinList(object):
     def __init__(self, end, volume_average_days=1, volume_forward=0):
-        self._polo = Poloniex()    #市场对象
+        self._polo = Poloniex()  # 市场对象
         # connect the internet to accees volumes
-        vol = self._polo.marketVolume()    #24小时交易量
-        ticker = self._polo.marketTicker()  #市场行情
+        vol = self._polo.marketVolume()  # 24小时交易量
+        ticker = self._polo.marketTicker()  # 市场行情
         pairs = []
         coins = []
         volumes = []
         prices = []
 
-        logging.info("select coin online from %s to %s" % (datetime.fromtimestamp(end-(DAY*volume_average_days)-
+        logging.info("select coin online from %s to %s" % (datetime.fromtimestamp(end - (DAY * volume_average_days) -
                                                                                   volume_forward).
                                                            strftime('%Y-%m-%d %H:%M'),
-                                                           datetime.fromtimestamp(end-volume_forward).
+                                                           datetime.fromtimestamp(end - volume_forward).
                                                            strftime('%Y-%m-%d %H:%M')))
+
         for k, v in vol.items():
-            #只查找和BTC(比特币)有关的交易
+            # 只查找和BTC(比特币)有关的交易
             if k.startswith("BTC_") or k.endswith("_BTC"):
                 pairs.append(k)
                 for c, val in v.items():
@@ -41,7 +42,7 @@ class CoinList(object):
                         volumes.append(self.__get_total_volume(pair=k, global_end=end,
                                                                days=volume_average_days,
                                                                forward=volume_forward))
-        self._df = pd.DataFrame({'coin': coins, 'pair': pairs, 'volume': volumes, 'price':prices})
+        self._df = pd.DataFrame({'coin': coins, 'pair': pairs, 'volume': volumes, 'price': prices})
         self._df = self._df.set_index('coin')
 
     @property
@@ -61,8 +62,8 @@ class CoinList(object):
 
     # get several days volume
     def __get_total_volume(self, pair, global_end, days, forward):
-        start = global_end-(DAY*days)-forward
-        end = global_end-forward
+        start = global_end - (DAY * days) - forward
+        end = global_end - forward
         chart = self.get_chart_until_success(pair=pair, period=DAY, start=start, end=end)
         result = 0
         for one_day in chart:
@@ -72,9 +73,8 @@ class CoinList(object):
                 result += one_day["quoteVolume"]
         return result
 
-
     def topNVolume(self, n=5, order=True, minVolume=0):
-        #返回前n个coins
+        # 返回按交易量排序后的前n个coins
         if minVolume == 0:
             r = self._df.loc[self._df['price'] > 2e-6]
             r = r.sort_values(by='volume', ascending=False)[:n]

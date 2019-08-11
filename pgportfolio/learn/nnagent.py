@@ -40,7 +40,7 @@ class NNAgent:
                                                  decay_steps=self.__config["training"]["decay_steps"],
                                                  decay_rate=self.__config["training"]["decay_rate"],
                                                  training_method=self.__config["training"]["training_method"])
-        self.__saver = tf.train.Saver()  # saver对象，将训练参数保存再checkpoint中
+        self.__saver = tf.train.Saver()  # saver对象，将训练参数保存在checkpoint中
         if restore_dir:
             self.__saver.restore(self.__net.session, restore_dir)
         else:  # 第一次跑进这个分支
@@ -79,6 +79,14 @@ class NNAgent:
         return self.__portfolio_value
 
     @property
+    def future_price(self):
+        return self.__future_price
+
+    @property
+    def future_omega(self):
+        return self.__future_omega
+
+    @property
     def loss(self):
         return self.__loss
 
@@ -87,8 +95,8 @@ class NNAgent:
         return self.__net.layers_dict
 
     def recycle(self):
-        tf.reset_default_graph()
-        self.__net.session.close()
+        tf.reset_default_graph()  # Clears the default graph stack and resets the global default graph.
+        self.__net.session.close()  #close session
 
     def __set_loss_function(self):  # 返回一个 计算loss的函数
         def loss_function4():
@@ -151,6 +159,7 @@ class NNAgent:
     def train(self, x, y, last_w, setw):
         tflearn.is_training(True, self.__net.session)
         self.evaluate_tensors(x, y, last_w, setw, [self.__train_operation])
+        # x,y,last_W:matrix   set_w: function
 
     def evaluate_tensors(self, x, y, last_w, setw, tensors):
         """
@@ -163,6 +172,7 @@ class NNAgent:
         """
         tensors = list(tensors)
         tensors.append(self.__net.output)
+
         assert not np.any(np.isnan(x))
         assert not np.any(np.isnan(y))
         assert not np.any(np.isnan(last_w)), \
@@ -172,7 +182,7 @@ class NNAgent:
                                                     self.__y: y,
                                                     self.__net.previous_w: last_w,
                                                     self.__net.input_num: x.shape[0]})
-        setw(results[-1][:, 1:])
+        setw(results[-1][:, 1:]) #matrix
         return results[:-1]
 
     # save the variables path including file name
@@ -205,10 +215,11 @@ class NNAgent:
 
     # the history is a 3d matrix, return a asset vector
     def decide_by_history(self, history, last_w):
+        # history   class: numpy.ndarray    shape: (3,11,31)
         assert isinstance(history, np.ndarray), \
             "the history should be a numpy array, not %s" % type(history)
         assert not np.any(np.isnan(last_w))
-        assert not np.any(np.isnan(history))
+        assert not np.any(np.isnan(history))   # make sure there is no Nan in the input data
         tflearn.is_training(False, self.session)
         history = history[np.newaxis, :, :, :]
         return np.squeeze(self.session.run(self.__net.output, feed_dict={self.__net.input_tensor: history,

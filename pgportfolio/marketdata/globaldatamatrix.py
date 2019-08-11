@@ -10,6 +10,9 @@ from pgportfolio.constants import *
 import sqlite3
 from datetime import datetime
 import logging
+from sqlite3 import IntegrityError
+import time
+from pgportfolio.constants import TRADE_COINS
 
 
 class HistoryManager:
@@ -17,15 +20,18 @@ class HistoryManager:
     # NOTE: return of the sqlite results is a list of tuples, each tuple is a row
     def __init__(self, coin_number, end, volume_average_days=1, volume_forward=0, online=True):
         self.initialize_db()  # 初始化History table
-        # self.__storage_period = FIVE_MINUTES  # keep this as 300
-        self.__storage_period = DAY   #period修改成一天
+        self.__storage_period = FIVE_MINUTES  # keep this as 300
         self._coin_number = coin_number
         self._online = online
         if self._online:
             self._coin_list = CoinList(end, volume_average_days, volume_forward)
+
         self.__volume_forward = volume_forward
         self.__volume_average_days = volume_average_days
         self.__coins = None
+        self.end = end
+        self.period = None
+        self.features = None
 
     @property
     def coins(self):
@@ -55,10 +61,16 @@ class HistoryManager:
         :return a panel, [feature, coin, time]
         """
         start = int(start - (start % period))
-        end = int(end - (end % period))
-        coins = self.select_coins(start=end - self.__volume_forward - self.__volume_average_days * DAY,
-                                  end=end - self.__volume_forward)
+        # end = int(end - (end % period))
+        cur = int(time.time())
+        end = cur - (cur % period) - period  # 将end设置为当前最近的前一个30分
+        # coins = self.select_coins(start=end - self.__volume_forward - self.__volume_average_days * DAY,
+        #                           end=end - self.__volume_forward)
+        coins = TRADE_COINS
         self.__coins = coins
+        self.period = period
+        self.features = features
+
         for coin in coins:
             self.update_data(start, end, coin)
 
@@ -69,16 +81,16 @@ class HistoryManager:
         logging.info("feature type list is %s" % str(features))
         self.__checkperiod(period)
 
-        time_index = pd.to_datetime(list(range(start, end + 1, period)), unit='s') #生成时间 index
-        panel = pd.Panel(items=features, major_axis=coins, minor_axis=time_index, dtype=np.float32) #三维面板
+        time_index = pd.to_datetime(list(range(start, end + 1, period)), unit='s')  # 生成时间 index
+        panel = pd.Panel(items=features, major_axis=coins, minor_axis=time_index, dtype=np.float32)  # 三维面板
 
         connection = sqlite3.connect(DATABASE_DIR)
         try:
             for row_number, coin in enumerate(coins):
                 for feature in features:
                     # NOTE: transform the start date to end date
-                    if feature == "close":   #收盘价格
-                        sql = ("SELECT date+{period} AS date_norm, close FROM History WHERE"  #此处将300改为period
+                    if feature == "close":  # 收盘价格
+                        sql = ("SELECT date+{period} AS date_norm, close FROM History WHERE"
                                " date_norm>={start} and date_norm<={end}"
                                " and date_norm%{period}=0 and coin=\"{coin}\"".format(
                             start=start, end=end, period=period, coin=coin))
@@ -115,15 +127,58 @@ class HistoryManager:
                     serial_data = pd.read_sql_query(sql, con=connection,
                                                     parse_dates=["date_norm"],
                                                     index_col="date_norm")
+
                     panel.loc[feature, coin, serial_data.index] = serial_data.squeeze()
                     panel = panel_fillna(panel, "both")
+
         finally:
             connection.commit()
             connection.close()
+
         return panel
 
+    def _update_data_matrix(self, panel):
+        # 更新global data，使数据包含当前最新period
+        cur = int(time.time())
+        end = cur - (cur % self.period)  # 将end设置为当前最近的一个30分
+        nti = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(end))  # new time index
+        coins = self.__coins
+        if end > self.end:
+            current_data = np.ndarray((11, 3))  # 当前最新coin 信息
+            for row, coin in enumerate(coins):
+                chart = self._coin_list.get_chart_until_success(pair=self._coin_list.allActiveCoins.at[coin, 'pair'],
+                                                                start=end - self.period,
+                                                                end=end - 1,
+                                                                period=self.period)
+                coin_info = chart[0]
+                for col, feature in enumerate(self.features):
+                    current_data[row][col] = coin_info[feature]
+            self.end = end
+            panel.ix[:, :, nti] = pd.DataFrame(current_data, index=panel.major_axis, columns=panel.items)
+
+        return panel
+
+        # for row_number, coin in enumerate(coins):
+        #     for feature in self.features:
+        #         if feature == "close":
+        #             sql = 'select close from History where date = {date} and coin = \"{coin}\"'.format(date=end,
+        #                                                                                                coin=coin)
+        #         elif feature == "high":
+        #             sql = 'select high from History where date = {date} and coin = \"{coin}\"'.format(date=end,
+        #                                                                                               coin=coin)
+        #         elif feature == "low":
+        #             sql = 'select low from History where date = {date} and coin = \"{coin}\"'.format(date=end,
+        #                                                                                              coin=coin)
+        #         else:
+        #             msg = ("The feature %s is not supported" % feature)
+        #             logging.error(msg)
+        #             raise ValueError(msg)
+        #         serial_data = pd.read_sql_query(sql, con=connect, parse_dates=["date"], index_col=["date"])
+        #         panel.loc[feature, coin, serial_data.index] = serial_data.squeeze()
+        #         panel = panel_fillna(panel, 'both')
+
     # select top coin_number of coins by volume from start to end
-    def select_coins(self, start, end):  #选择asset
+    def select_coins(self, start, end):  # 选择asset
         if not self._online:
             logging.info(
                 "select coins offline from %s to %s" % (datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M'),
@@ -172,24 +227,26 @@ class HistoryManager:
             cursor = connection.cursor()
             min_date = cursor.execute('SELECT MIN(date) FROM History WHERE coin=?;', (coin,)).fetchall()[0][0]
             max_date = cursor.execute('SELECT MAX(date) FROM History WHERE coin=?;', (coin,)).fetchall()[0][0]
-            #当前货币的最小最大日期
+            # 当前货币的最小最大日期
             if min_date == None or max_date == None:
                 self.__fill_data(start, end, coin, cursor)
             else:
-                fg = 10 * self.__storage_period    # 10 * 300
-                if max_date + fg < end:
+                # fg = 1 * self.__storage_period  # 1 * 300
+                # if max_date + fg < end:
+                if max_date < end:
                     if not self._online:
                         raise Exception("Have to be online")
                     self.__fill_data(max_date + self.__storage_period, end, coin, cursor)
                 if min_date > start and self._online:
-                    self.__fill_data(start, min_date - self.__storage_period - 1, coin, cursor)   #此句有问题
+                    self.__fill_data(start, min_date - self.__storage_period - 1, coin, cursor)
 
             # if there is no data
         finally:
             connection.commit()
             connection.close()
 
-    def __fill_data(self, start, end, coin, cursor):  #补充数据
+    def __fill_data(self, start, end, coin, cursor):  # 补充数据
+        # pair = 'BTC_{}'.format(coin)
         chart = self._coin_list.get_chart_until_success(
             pair=self._coin_list.allActiveCoins.at[coin, 'pair'],
             start=start,
@@ -197,10 +254,6 @@ class HistoryManager:
             period=self.__storage_period)
         logging.info("fill %s data from %s to %s" % (coin, datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M'),
                                                      datetime.fromtimestamp(end).strftime('%Y-%m-%d %H:%M')))
-        #获取chart此处有错误，如果一次请求的数据太多，会返回error
-        #{'error': 'Data requested is too large. Please specify a longer period or a shorter date range, or use resolution=auto to automatically calculate the shortest supported period for your date range.'}
-        #如果chart不是list类型，则表明出错
-        assert isinstance(chart,list),'chart is a {},not a list,{}'.format(type(chart),chart)
         for c in chart:
             if c["date"] > 0:
                 if c['weightedAverage'] == 0:
@@ -209,13 +262,17 @@ class HistoryManager:
                     weightedAverage = c['weightedAverage']
 
                 # NOTE here the USDT is in reversed order
-                if 'reversed_' in coin:
-                    cursor.execute('INSERT INTO History VALUES (?,?,?,?,?,?,?,?,?)',
-                                   (c['date'], coin, 1.0 / c['low'], 1.0 / c['high'], 1.0 / c['open'],
-                                    1.0 / c['close'], c['quoteVolume'], c['volume'],
-                                    1.0 / weightedAverage))
-                else:
-                    cursor.execute('INSERT INTO History VALUES (?,?,?,?,?,?,?,?,?)',
-                                   (c['date'], coin, c['high'], c['low'], c['open'],
-                                    c['close'], c['volume'], c['quoteVolume'],
-                                    weightedAverage))
+                try:
+                    if 'reversed_' in coin:
+                        cursor.execute('INSERT INTO History VALUES (?,?,?,?,?,?,?,?,?)',
+                                       (c['date'], coin, 1.0 / c['low'], 1.0 / c['high'], 1.0 / c['open'],
+                                        1.0 / c['close'], c['quoteVolume'], c['volume'],
+                                        1.0 / weightedAverage))
+                    else:
+                        cursor.execute('INSERT INTO History VALUES (?,?,?,?,?,?,?,?,?)',
+                                       (c['date'], coin, c['high'], c['low'], c['open'],
+                                        c['close'], c['volume'], c['quoteVolume'],
+                                        weightedAverage))
+                except IntegrityError:  # may have the SQL Error
+                    # print('{} has been in the database'.format(c['date']))
+                    pass
