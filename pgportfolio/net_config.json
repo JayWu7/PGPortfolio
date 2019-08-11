@@ -22,9 +22,9 @@
     "global_period":1800,
     "feature_number":3,
     "test_portion":0.08,
-    "online":false,
+    "online":true,
     "start_date":"2019/01/01",
-    "end_date":"2019/03/01",
+    "end_date":"2019/08/01",
     "volume_average_days":30
   },
 
